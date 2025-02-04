@@ -1,0 +1,6 @@
+.pio
+.vscode
+diagram.json
+platformio.ini
+wokwi.toml
+include/Config.h
