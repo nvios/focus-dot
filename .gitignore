@@ -1,5 +1,6 @@
 .pio
 .vscode
+.DS_Store
 diagram.json
 platformio.ini
 wokwi.toml
