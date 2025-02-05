@@ -1,26 +1,42 @@
 #include "configurations/ConfigManager.h"
 
-DeviceConfig ConfigManager::config = {
-    "",       // wifiSSID
-    "",       // wifiPASS
-    0,        // utcOffset
-    0         // daylightOffset
-};
+DeviceConfig ConfigManager::config = { "", "", 3600, 0, "", 1883, "", "" };
 
 void ConfigManager::load() {
-    // mock example
-    // read from EEPROM or Preferences
-    // In real code, you parse stored values into config
-    // e.g. config.wifiSSID = ...
-    // For now just do:
-    config.wifiSSID = "";
-    config.wifiPASS = "";
-    config.utcOffset = 3600;      // example
-    config.daylightOffset = 0;    // example
+    Preferences preferences;
+    preferences.begin("config", false);
+
+    strcpy(config.wifiSSID, preferences.getString("wifiSSID", "").c_str());
+    strcpy(config.wifiPass, preferences.getString("wifiPass", "").c_str());
+    config.utcOffset = preferences.getInt("utcOffset", 3600);
+    config.daylightOffset = preferences.getInt("daylightOffset", 0);
+    strcpy(config.mqttServer, preferences.getString("mqttServer", "").c_str());
+    config.mqttPort = preferences.getInt("mqttPort", 1883);
+    strcpy(config.mqttUsername, preferences.getString("mqttUsername", "").c_str());
+    strcpy(config.mqttKey, preferences.getString("mqttKey", "").c_str());
+    
+    preferences.end();
 }
 
 void ConfigManager::save() {
-    // again, mock example
-    // write config fields to EEPROM or Preferences
-    // e.g. preferences.putString("ssid", config.wifiSSID);
+    Preferences preferences;
+    preferences.begin("config", false);
+
+    preferences.putString("wifiSSID", config.wifiSSID);
+    preferences.putString("wifiPass", config.wifiPass);
+    preferences.putInt("utcOffset", config.utcOffset);
+    preferences.putInt("daylightOffset", config.daylightOffset);
+    preferences.putString("mqttServer", config.mqttServer);
+    preferences.putInt("mqttPort", config.mqttPort);
+    preferences.putString("mqttUsername", config.mqttUsername);
+    preferences.putString("mqttKey", config.mqttKey);
+    
+    preferences.end();
+}
+
+void ConfigManager::reset() {
+    Preferences preferences;
+    preferences.begin("config", false);
+    preferences.clear();
+    preferences.end();
 }

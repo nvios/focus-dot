@@ -36,7 +36,7 @@ void setup()
     led.begin();
     voc.begin();
 
-    if (!wifiController.begin(WIFI_SSID, WIFI_PASS))
+    if (!wifiController.begin(WIFI_SSID, WIFI_PASS)) // for prod: if (!wifiController.begin(ConfigManager::config.wifiSSID, ConfigManager::config.wifiPass)) 
     {
         Serial.println("Handling Wi-Fi connection failure...");
         ESP.restart();
