@@ -1,5 +1,4 @@
 #include "hardware/Button.h"
-#include <Arduino.h>
 
 unsigned long Button::pressStartTime = 0;
 bool Button::resetHoldFired = false;

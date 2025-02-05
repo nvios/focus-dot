@@ -1,10 +1,9 @@
 #ifndef LED_DRIVER_H
 #define LED_DRIVER_H
 
-#include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 #include <functional>
-#include "Config.h"
+#include "configurations/Config.h"
 
 // Define LEDState enum if not already defined elsewhere
 enum class LEDState

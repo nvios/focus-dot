@@ -2,9 +2,9 @@
 #define NTP_CONTROLLER_H
 
 #include <Arduino.h>
-#include "Config.h"
+#include "configurations/Config.h"
 
-void setupTime(const char* ntpServer, long utcOffset, int daylightOffset);
+void setupTime(const char* ntpServer);
 
 bool syncTime(unsigned long timeoutMs);
 

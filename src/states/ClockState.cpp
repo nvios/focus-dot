@@ -1,33 +1,27 @@
 #include "states/ClockState.h"
+#include "hardware/Display.h"
+#include "hardware/VOC.h"
 
-/* ClockState::ClockState(DisplayDriver &display, NTPClient &timeClient)
-    : _display(display), _timeClient(timeClient), _lastUpdate(0) {}
+ClockState::ClockState(Display &display, VOC &voc)
+    : display(display), voc(voc) {}
 
-void ClockState::enter()
+void ClockState::toggleLayout()
 {
-    _display.clear();
-    _lastUpdate = millis();
+    stackedLayout = !stackedLayout;
 }
 
 void ClockState::update()
 {
-    if (_ntpClient.isTimeSynced())
-    {
-        String time = _ntpClient.getFormattedTime();
-        _display.drawText(time.c_str(), 10, 20);
-    }
-    else
-    {
-        _display.drawText("Syncing...", 10, 20);
-    }
-}
+    unsigned long now = millis();
+    if (now - lastDraw < 1000)
+        return;
+    lastDraw = now;
 
-void ClockState::handleInput()
-{
-    // Handle button presses to switch states (e.g., BTN_LEFT pressed)
-}
+    time_t t = time(nullptr);
+    struct tm *ti = localtime(&t);
+    const char *daysOfWeek[] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
 
-void ClockState::exit()
-{
-    _display.clear();
-} */
+    display.drawUi(stackedLayout ? 0 : 1, ti->tm_hour, ti->tm_min,
+                   daysOfWeek[ti->tm_wday], ti->tm_mday,
+                   voc.readVOC());
+}

@@ -1,9 +1,11 @@
 #include "controllers/network/NTPController.h"
+#include "configurations/ConfigManager.h"
 #include <time.h>
 
-void setupTime(const char* ntpServer, long utcOffset, int daylightOffset)
-{
-    configTime(utcOffset, daylightOffset, ntpServer);
+void setupTime(const char* ntpServer) {
+    configTime(ConfigManager::config.utcOffset, 
+               ConfigManager::config.daylightOffset,
+               ntpServer);
 }
 
 bool syncTime(unsigned long timeoutMs)

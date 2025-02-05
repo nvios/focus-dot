@@ -2,19 +2,17 @@
 #include "hardware/LED.h"
 #include "hardware/Display.h"
 #include "controllers/network/WiFiController.h"
+#include "states/ClockState.h"
 
-ButtonState::ButtonState(LED &led, Display &display, WiFiController &wifi)
-    : led(led)
-    , display(display)
-    , wifiController(wifi)
-    , currentState(STATE_IDLE)
-{}
+ButtonState::ButtonState(LED &led, Display &display, WiFiController &wifi, ClockState &clock)
+    : led(led), display(display), wifiController(wifi), clock(clock), currentState(STATE_IDLE) {}
 
 void ButtonState::handleEvent(ButtonEvent event) {
     switch (currentState) {
         case STATE_IDLE:
             if (event == BUTTON_EVENT_SINGLE_CLICK) {
                 Serial.println("UI Toggle State Changed");
+                clock.toggleLayout();
             }
             else if (event == BUTTON_EVENT_DOUBLE_CLICK) {
                 Serial.println("Double Click: Refreshing Wi-Fi");
@@ -29,15 +27,16 @@ void ButtonState::handleEvent(ButtonEvent event) {
                 setState(STATE_RESETTING);
             }
             break;
-
         case STATE_CONFIG_MODE:
+            if (event == BUTTON_EVENT_RESET_HOLD) {
+                Serial.println("Reset from Config Mode...");
+                setState(STATE_RESETTING);
+            }
             break;
-
         case STATE_RESETTING:
             Serial.println("Performing Factory Reset...");
             ESP.restart();
             break;
-
         default:
             setState(STATE_IDLE);
             break;

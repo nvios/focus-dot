@@ -1,8 +1,6 @@
 #ifndef BUTTON_STATE_H
 #define BUTTON_STATE_H
 
-#include <Arduino.h>
-
 enum AppState {
     STATE_IDLE,
     STATE_CONFIG_MODE,
@@ -20,18 +18,18 @@ enum ButtonEvent {
 class LED;
 class Display;
 class WiFiController;
+class ClockState;
 
 class ButtonState {
 public:
-    ButtonState(LED &led, Display &display, WiFiController &wifi);
+    ButtonState(LED &led, Display &display, WiFiController &wifi, ClockState &clock);
     void handleEvent(ButtonEvent event);
-    AppState getCurrentState() const;
     void setState(AppState newState);
-
 private:
     LED &led;
     Display &display;
     WiFiController &wifiController;
+    ClockState &clock;
     AppState currentState;
 };
 

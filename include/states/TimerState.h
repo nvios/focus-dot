@@ -4,7 +4,7 @@
 #include "State.h"
 #include "hardware/Display.h"
 #include "hardware/LED.h"
-#include "Config.h"
+#include "configurations/Config.h"
 
 /* class TimerState : public State {
 public:

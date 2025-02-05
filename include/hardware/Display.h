@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <Adafruit_SSD1306.h>
-#include <Config.h>
+#include <configurations/Config.h>
 
 class Display {
 public:

@@ -1,7 +1,6 @@
 #ifndef WIFI_CONTROLLER_H
 #define WIFI_CONTROLLER_H
 
-#include <Arduino.h>
 #include <WiFi.h>
 #include "hardware/Display.h"
 

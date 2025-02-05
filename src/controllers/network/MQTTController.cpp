@@ -4,9 +4,9 @@ WiFiClient client;
 Adafruit_MQTT_Client mqtt(&client, MQTT_SERVER, MQTT_PORT, MQTT_USERNAME, MQTT_KEY);
 Adafruit_MQTT_Subscribe eventFeed(&mqtt, MQTT_USERNAME MQTT_FEED);
 
-String eventTitle = "";
-String eventStart = "";
-String eventEnd = "";
+String eventTitle;
+String eventStart;
+String eventEnd;
 bool showEvent = false, eventDisplayed = false;
 unsigned long eventDisplayStart = 0;
 
@@ -43,10 +43,12 @@ void parseEventJSON(const char *payload)
 {
     JsonDocument doc;
     DeserializationError err = deserializeJson(doc, payload);
-    if (err)
-    {
-        Serial.print("JSON parse failed: ");
-        Serial.println(err.f_str());
+    if (err) {
+        Serial.println("JSON parse failed");
         return;
     }
+
+  eventTitle = doc["subject"] | "";
+  eventStart = doc["startTime"] | "";
+  eventEnd = doc["endTime"] | "";
 }

@@ -1,7 +1,6 @@
 #ifndef VOC_DRIVER_H
 #define VOC_DRIVER_H
 
-#include <Arduino.h>
 #include "LED.h"
 
 class VOC
