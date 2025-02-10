@@ -4,4 +4,4 @@
 diagram.json
 platformio.ini
 wokwi.toml
-include/Config.h
+include/configurations/Config.h

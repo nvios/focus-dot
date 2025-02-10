@@ -47,16 +47,16 @@ void setup()
     if (!connected)
     {
         Serial.println("MQTT connection failed; continuing anyway.");
-        display.writeText("No luck with accessing the calendar :(");
+        display.writeAlignedText("No luck with accessing the calendar :(");
     }
 
-    display.writeText("Checking the time...");
+    display.writeAlignedText("Checking the time...");
     setupTime(NTP_SERVER);
     bool synced = syncTime(10000);
     if (!synced)
     {
         Serial.println("Time sync failed, continuing anyway.");
-        display.writeText("Time sync failed :(");
+        display.writeAlignedText("Time sync failed :(");
     }
 
     button.begin();
