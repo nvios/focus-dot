@@ -105,7 +105,7 @@ void loop()
         if (!eventDisplayed)
         {
             led.setLEDState(LEDState::EVENT_RAINBOW);
-            display.drawEventOnDisplay(eventTitle, eventStart, eventEnd, 1);
+            display.drawEvent(eventTitle, eventStart, eventEnd, 1);
             eventDisplayed = true;
         }
     }

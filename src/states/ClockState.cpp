@@ -5,11 +5,6 @@
 ClockState::ClockState(Display &display, VOC &voc)
     : display(display), voc(voc) {}
 
-void ClockState::toggleLayout()
-{
-    stackedLayout = !stackedLayout;
-}
-
 void ClockState::update()
 {
     unsigned long now = millis();
@@ -21,7 +16,7 @@ void ClockState::update()
     struct tm *ti = localtime(&t);
     const char *daysOfWeek[] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
 
-    display.drawUi(stackedLayout ? 0 : 1, ti->tm_hour, ti->tm_min,
-                   daysOfWeek[ti->tm_wday], ti->tm_mday,
-                   voc.readVOC());
+    display.drawClock(ti->tm_hour, ti->tm_min,
+                      daysOfWeek[ti->tm_wday], ti->tm_mday,
+                      voc.readVOC());
 }

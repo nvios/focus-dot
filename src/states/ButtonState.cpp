@@ -48,15 +48,16 @@ void ButtonState::setState(AppState newState) {
     switch (currentState) {
         case STATE_IDLE:
             led.setLEDState(LEDState::IDLE);
-            display.writeText("Idle State");
+            display.writeAlignedText("Idle State");
             break;
         case STATE_CONFIG_MODE:
             led.setLEDState(LEDState::IDLE);
-            display.writeText("Configuration Mode");
+            display.writeAlignedText("Configuration Mode");
+            delay(2000);
             break;
         case STATE_RESETTING:
             led.setLEDState(LEDState::IDLE);
-            display.writeText("Resetting...");
+            display.writeAlignedText("Resetting...");
             break;
         default:
             break;
