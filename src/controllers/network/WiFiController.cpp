@@ -20,6 +20,7 @@ bool WiFiController::begin(const char *ssid, const char *password)
         Serial.print(".");
     }
 
+    Serial.print("Wi-Fi Connected!");
     display.writeAlignedText("Wi-Fi Connected!");
     return true;
 }

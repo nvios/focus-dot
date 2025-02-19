@@ -16,9 +16,10 @@
 LED led;
 Display display;
 VOC voc(led);
-WiFiController wifiController(display);
-ClockState clockState(display, voc);
 State appState;
+WiFiController wifiController(display);
+MQTTController mqttController(appState, led, display);
+ClockState clockState(display, voc);
 ButtonState buttonState(led, display, wifiController, clockState, appState);
 Button button(BUTTON_PIN, true, buttonState);
 
@@ -27,8 +28,6 @@ static unsigned long lastLedUpdate = 0;
 static unsigned long lastDisplayUpdate = 0;
 static unsigned long lastMqttCheck = 0;
 
-// Create our MQTT controller (now also takes Display)
-MQTTController mqttController(appState, led, display);
 
 void setup()
 {
@@ -75,7 +74,6 @@ void loop()
         led.update();
     }
 
-    // Periodic check for MQTT connectivity and incoming messages
     if (now - lastMqttCheck >= MQTT_RETRY_FREQUENCY_MS)
     {
         lastMqttCheck = now;
@@ -84,7 +82,6 @@ void loop()
     mqttController.update(now);
 
     if (appState.getMode() == AppMode::TIMER) {
-       // keep the timer updated
        appState.getTimer().update();
        display.drawTimer(appState.getTimer());
     }

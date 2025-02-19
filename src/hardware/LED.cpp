@@ -125,7 +125,7 @@ void LED::animateTailFade(std::function<uint32_t(int)> colorFunc, uint8_t tailLe
             int dist = (_activeLed + _ring.numPixels() - i) % _ring.numPixels();
             if (dist < tailLen)
             {
-                uint8_t b = ((tailLen - 1 - dist) * 255) / (tailLen - 1);
+                uint8_t b = (uint8_t)(pow((float)(tailLen - 1 - dist) / (tailLen - 1), 2) * 50);
                 uint32_t color = colorFunc(i);
 
                 uint8_t r = (color >> 16) & 0xFF;
