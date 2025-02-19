@@ -1,32 +1,67 @@
 #include "controllers/network/MQTTController.h"
 
-WiFiClient client;
-Adafruit_MQTT_Client mqtt(&client, MQTT_SERVER, MQTT_PORT, MQTT_USERNAME, MQTT_KEY);
-Adafruit_MQTT_Subscribe eventFeed(&mqtt, MQTT_USERNAME MQTT_FEED);
+// Constructor sets up the MQTT client, subscription, and references
+MQTTController::MQTTController(State &appStateRef, LED &ledRef, Display &displayRef)
+  : appState(appStateRef),
+    led(ledRef),
+    display(displayRef),
+    mqtt(&client, MQTT_SERVER, MQTT_PORT, MQTT_USERNAME, MQTT_KEY),
+    eventFeed(&mqtt, MQTT_USERNAME MQTT_FEED)
+{}
 
-String eventTitle;
-String eventStart;
-String eventEnd;
-bool showEvent = false, eventDisplayed = false;
-unsigned long eventDisplayStart = 0;
+void MQTTController::begin(int maxAttempts) {
+    display.writeAlignedText("Syncing your events...");
+    if (mqttConnect(maxAttempts)) {
+        mqtt.subscribe(&eventFeed);
+    } else {
+        Serial.println("MQTT connection failed; continuing anyway.");
+    }
+}
 
-bool mqttConnect(int maxAttempts)
-{
+void MQTTController::checkConnection(int maxAttempts) {
+    if (!mqtt.connected()) {
+        mqttConnect(maxAttempts);
+        if (mqtt.connected()) mqtt.subscribe(&eventFeed);
+    }
+}
+
+void MQTTController::update(unsigned long now) {
+    if (!mqtt.connected()) return;
+    Adafruit_MQTT_Subscribe *sub = mqtt.readSubscription(50);
+    if (sub == &eventFeed) {
+         parseEventJSON((char *)eventFeed.lastread);
+         appState.setMode(AppMode::NOTIFICATION);
+    }
+
+    // If in NOTIFICATION mode, display the event (if not already)
+    if (appState.getMode() == AppMode::NOTIFICATION) {
+         if (!eventDisplayed) {
+             led.setLEDState(LEDState::EVENT_RAINBOW);
+             display.drawEvent(eventTitle, eventStart, eventEnd, 1);
+             eventDisplayStart = now;
+             eventDisplayed = true;
+         } else {
+             if (now - eventDisplayStart >= EVENT_DISPLAY_MS) {
+                 led.setLEDState(LEDState::IDLE);
+                 appState.setMode(AppMode::CLOCK); // This disregards the mode in which the device was before the event.
+                 eventDisplayed = false;
+                 eventTitle = eventStart = eventEnd = "";
+             }
+         }
+    }
+}
+
+bool MQTTController::mqttConnect(int maxAttempts) {
     int attempts = 0;
-    while (attempts < maxAttempts)
-    {
+    while (attempts < maxAttempts) {
         Serial.print("Attempting MQTT connection (try #");
         Serial.print(attempts + 1);
-        Serial.println(")...");
-
+        Serial.println(")");
         int8_t ret = mqtt.connect();
-        if (ret == 0)
-        {
+        if (ret == 0) {
             Serial.println("MQTT Connected!");
             return true;
-        }
-        else
-        {
+        } else {
             Serial.print("MQTT connect failed: ");
             Serial.println(mqtt.connectErrorString(ret));
             mqtt.disconnect();
@@ -34,21 +69,21 @@ bool mqttConnect(int maxAttempts)
         }
         attempts++;
     }
-
     Serial.println("Failed to connect to MQTT after max attempts. Continuing without MQTT.");
+    display.writeAlignedText("Event sync failed :(");
     return false;
 }
 
-void parseEventJSON(const char *payload)
+void MQTTController::parseEventJSON(const char *payload)
 {
     JsonDocument doc;
     DeserializationError err = deserializeJson(doc, payload);
-    if (err) {
+    if (err)
+    {
         Serial.println("JSON parse failed");
         return;
     }
-
-  eventTitle = doc["subject"] | "";
-  eventStart = doc["startTime"] | "";
-  eventEnd = doc["endTime"] | "";
+    eventTitle = doc["subject"] | "";
+    eventStart = doc["startTime"] | "";
+    eventEnd = doc["endTime"] | "";
 }

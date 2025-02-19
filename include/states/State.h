@@ -1,17 +1,28 @@
 #ifndef STATE_H
 #define STATE_H
 
-#include "hardware/Display.h"
-#include "hardware/LED.h"
+#include <Arduino.h>
+#include "TimerState.h"
 
-class State
-{
+enum class AppMode {
+    CLOCK,
+    TIMER,
+    ANIMATION,
+    NOTIFICATION,
+    DIALOGUE
+};
+
+class State {
 public:
-    virtual void enter() = 0;       // Called when entering the state
-    virtual void update() = 0;      // Called in the main loop
-    virtual void handleInput() = 0; // Handle button presses
-    virtual void exit() = 0;        // Called when leaving the state
-    virtual ~State() = default;
+    State();
+    void cycleMode(); 
+    AppMode getMode() const;
+    void setMode(AppMode mode);
+    TimerState& getTimer();
+
+private:
+    AppMode currentMode;
+    TimerState timer;
 };
 
 #endif

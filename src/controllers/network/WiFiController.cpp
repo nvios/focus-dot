@@ -11,8 +11,8 @@ bool WiFiController::begin(const char *ssid, const char *password)
     unsigned long start = millis();
     while (WiFi.status() != WL_CONNECTED)
     {
-        if (millis() - start > 10000)
-        { // 10-second timeout
+        if (millis() - start > 20000)
+        {
             display.writeAlignedText("Wi-Fi connection failed!");
             return false;
         }

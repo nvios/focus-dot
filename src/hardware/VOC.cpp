@@ -1,44 +1,35 @@
 #include "hardware/VOC.h"
-#include "hardware/LED.h"
-
-// Initialize the static mock values
-const int VOC::mockVals[3] = {12, 93, 248};
 
 VOC::VOC(LED& led)
-    : lastVocUpdate(0), cycleIndex(0), _led(led)
+    : _led(led), lastVocUpdate(0), _vocVal(0)
 {
-    // Constructor body can be empty or used for additional initialization
 }
 
 void VOC::begin()
 {
-    // Initialize VOC sensor here if needed
-    // For mock values, no initialization is required
+    if (!_sgp40.begin(10000)) {
+        // Handle sensor initialization failure
+    }
 }
 
 int VOC::readVOC()
 {
     unsigned long now = millis();
 
-    if (now - lastVocUpdate >= 10000)
+    // Update the reading every 4 seconds
+    if (now - lastVocUpdate >= 4000)
     {
         lastVocUpdate = now;
-        cycleIndex = (cycleIndex + 1) % 3;
+        _vocVal = _sgp40.getVoclndex();
 
-        // Update LED state based on cycleIndex
-        switch (cycleIndex)
-        {
-            case 0:
-                _led.setLEDState(LEDState::VOC_GREEN);
-                break;
-            case 1:
-                _led.setLEDState(LEDState::VOC_YELLOW);
-                break;
-            case 2:
-                _led.setLEDState(LEDState::VOC_RED);
-                break;
+        // Threshold-based LED behavior
+        if (_vocVal < 100) {
+            _led.setLEDState(LEDState::VOC_GREEN);
+        } else if (_vocVal < 180) {
+            _led.setLEDState(LEDState::VOC_YELLOW);
+        } else {
+            _led.setLEDState(LEDState::VOC_RED);
         }
     }
-
-    return mockVals[cycleIndex];
+    return _vocVal;
 }

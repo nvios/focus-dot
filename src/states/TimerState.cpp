@@ -1,80 +1,97 @@
 #include "states/TimerState.h"
 
-/*TimerState::TimerState(DisplayDriver &display, LEDDriver &ledDriver)
-    : _display(display), _ledDriver(ledDriver),
-      _timerStartTime(0), _remainingTime(0), _isRunning(false) {}
-
-void TimerState::enter()
+TimerState::TimerState()
+    : presetCount(3), currentPresetIdx(0),
+      running(false), paused(false),
+      endTime(0), pausedRemaining(0)
 {
-    _display.clear();
-    _remainingTime = DEFAULT_TIMER_DURATION;
-    _updateDisplay();
-    _ledDriver.startAnimation(); // Start LED animation
+    presetDurations[0] = 60;  // 1 minute
+    presetDurations[1] = 300; // 5 minutes
+    presetDurations[2] = 600; // 10 minutes
+}
+
+void TimerState::setPresets(const int *presets, int count)
+{
+    presetCount = (count > 3) ? 3 : count;
+    for (int i = 0; i < presetCount; i++)
+    {
+        presetDurations[i] = presets[i];
+    }
+}
+
+void TimerState::cyclePreset()
+{
+    currentPresetIdx = (currentPresetIdx + 1) % presetCount;
+}
+
+void TimerState::start()
+{
+    running = true;
+    paused = false;
+    unsigned long durationMs = presetDurations[currentPresetIdx] * 1000UL;
+    endTime = nowMs() + durationMs;
+    pausedRemaining = 0;
+}
+
+void TimerState::pause()
+{
+    if (running && !paused)
+    {
+        paused = true;
+        pausedRemaining = endTime - nowMs();
+    }
+}
+
+void TimerState::resume()
+{
+    if (running && paused)
+    {
+        paused = false;
+        endTime = nowMs() + pausedRemaining;
+        pausedRemaining = 0;
+    }
+}
+
+void TimerState::stop()
+{
+    running = false;
+    paused = false;
+    endTime = 0;
+    pausedRemaining = 0;
+    // optionally reset preset index or keep it
+}
+
+bool TimerState::isRunning() const { return running; }
+bool TimerState::isPaused() const { return paused; }
+
+int TimerState::getCurrentPresetIndex() const { return currentPresetIdx; }
+
+unsigned long TimerState::getRemainingMs() const
+{
+    if (!running)
+        return 0;
+    if (paused)
+        return pausedRemaining;
+    long remain = (long)endTime - (long)nowMs();
+    return (remain > 0) ? remain : 0;
+}
+
+int TimerState::getCurrentPresetDuration() const
+{
+    if (currentPresetIdx < 0 || currentPresetIdx >= presetCount)
+        return 0;
+    return presetDurations[currentPresetIdx];
 }
 
 void TimerState::update()
 {
-    if (_isRunning)
+    if (running && !paused)
     {
-        unsigned long elapsed = millis() - _timerStartTime;
-        if (elapsed >= _remainingTime)
+        if (nowMs() >= endTime)
         {
-            _isRunning = false;
-            _remainingTime = 0;
-            _ledDriver.setAlertAnimation(); // Switch to alert mode
+            stop();
         }
-        else
-        {
-            _remainingTime -= elapsed;
-            _timerStartTime = millis();
-        }
-        _updateDisplay();
     }
-    _ledDriver.update(); // Update LEDs
 }
 
-void TimerState::exit()
-{
-    _display.clear();
-    _ledDriver.stopAnimation(); // Turn off LEDs
-}
-
-// Other methods (startTimer, pauseTimer, etc.) remain unchanged
-
-void TimerState::handleInput()
-{
-    // Example: Use button presses to control the timer
-    // if (ButtonDriver::isPressed(BTN_PAUSE)) pauseTimer();
-}
-
-void TimerState::startTimer(unsigned long duration)
-{
-    _remainingTime = duration;
-    _timerStartTime = millis();
-    _isRunning = true;
-}
-
-void TimerState::pauseTimer()
-{
-    _isRunning = false;
-}
-
-void TimerState::resetTimer()
-{
-    _isRunning = false;
-    _remainingTime = DEFAULT_TIMER_DURATION;
-    _updateDisplay();
-}
-
-void TimerState::_updateDisplay()
-{
-    unsigned long seconds = _remainingTime / 1000;
-    char buf[10];
-    snprintf(buf, sizeof(buf), "%02lu:%02lu", seconds / 60, seconds % 60);
-
-    _display.clear();
-    _display.drawText(buf, 10, 20);
-
-    uint8_t progress = 100 - ((_remainingTime * 100) / DEFAULT_TIMER_DURATION);
-    _display.drawProgressBar(progress);
-}*/
+unsigned long TimerState::nowMs() const { return millis(); }

@@ -10,6 +10,7 @@
 #include "controllers/network/NTPController.h"
 #include "controllers/network/MQTTController.h"
 #include "states/ClockState.h"
+#include "states/State.h"
 
 // Instances
 LED led;
@@ -17,13 +18,17 @@ Display display;
 VOC voc(led);
 WiFiController wifiController(display);
 ClockState clockState(display, voc);
-ButtonState buttonState(led, display, wifiController, clockState);
+State appState;
+ButtonState buttonState(led, display, wifiController, clockState, appState);
 Button button(BUTTON_PIN, true, buttonState);
 
 // Timing variables
 static unsigned long lastLedUpdate = 0;
 static unsigned long lastDisplayUpdate = 0;
 static unsigned long lastMqttCheck = 0;
+
+// Create our MQTT controller (now also takes Display)
+MQTTController mqttController(appState, led, display);
 
 void setup()
 {
@@ -36,19 +41,16 @@ void setup()
     led.begin();
     voc.begin();
 
-    if (!wifiController.begin(WIFI_SSID, WIFI_PASS)) // for prod: if (!wifiController.begin(ConfigManager::config.wifiSSID, ConfigManager::config.wifiPass)) 
+    // for prod: if (!wifiController.begin(ConfigManager::config.wifiSSID, ConfigManager::config.wifiPass)) 
+    if (!wifiController.begin(WIFI_SSID, WIFI_PASS))
     {
         Serial.println("Handling Wi-Fi connection failure...");
+        display.writeAlignedText("Connection timeout. Restarting...");
+        delay(2000);
         ESP.restart();
     }
 
-    mqtt.subscribe(&eventFeed);
-    bool connected = mqttConnect(1);
-    if (!connected)
-    {
-        Serial.println("MQTT connection failed; continuing anyway.");
-        display.writeAlignedText("No luck with accessing the calendar :(");
-    }
+    mqttController.begin(1);
 
     display.writeAlignedText("Checking the time...");
     setupTime(NTP_SERVER);
@@ -62,6 +64,42 @@ void setup()
     button.begin();
 }
 
+void loop()
+{
+    button.tick();
+    unsigned long now = millis();
+
+    if (now - lastLedUpdate >= 50)
+    {
+        lastLedUpdate = now;
+        led.update();
+    }
+
+    // Periodic check for MQTT connectivity and incoming messages
+    if (now - lastMqttCheck >= MQTT_RETRY_FREQUENCY_MS)
+    {
+        lastMqttCheck = now;
+        mqttController.checkConnection(3); 
+    }
+    mqttController.update(now);
+
+    if (appState.getMode() == AppMode::TIMER) {
+       // keep the timer updated
+       appState.getTimer().update();
+       display.drawTimer(appState.getTimer());
+    }
+    else if (appState.getMode() == AppMode::CLOCK) {
+       clockState.update();
+    }
+    else if (appState.getMode() == AppMode::ANIMATION) {
+       // display animation
+    }
+    else if (appState.getMode() == AppMode::DIALOGUE) {
+       display.writeAlignedText("Dialogue mode!");
+    }
+}
+
+/*
 void loop()
 {
     button.tick();
@@ -109,8 +147,23 @@ void loop()
             eventDisplayed = true;
         }
     }
-    else
-    {
-        clockState.update();
+    else {
+        // MAIN MODE HANDLING
+        AppMode mode = appState.getMode();
+
+        if (mode == AppMode::CLOCK) {
+            clockState.update();
+        }
+        else if (mode == AppMode::TIMER) {
+            // Update timer countdown
+            appState.getTimer().update();
+            // Draw the timer
+            display.drawTimer(appState.getTimer());
+        }
+        else if (mode == AppMode::ANIMATION) {
+            // Some custom animation logic
+            // e.g. display.showAnimation();
+        }
     }
-}
+} 
+*/

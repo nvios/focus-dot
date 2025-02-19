@@ -1,30 +1,37 @@
-#ifndef TIMER_STATE_H
-#define TIMER_STATE_H
+#ifndef TIMERSTATE_H
+#define TIMERSTATE_H
 
-#include "State.h"
-#include "hardware/Display.h"
-#include "hardware/LED.h"
-#include "configurations/Config.h"
+#include <Arduino.h>
 
-/* class TimerState : public State {
+class TimerState {
 public:
-    //TimerState(DisplayDriver& display, LEDDriver& ledDriver);
-    void enter() override;
-    void update() override;
-    void handleInput() override;
-    void exit() override;
+    TimerState();
 
-    void startTimer(unsigned long duration);
-    void pauseTimer();
-    void resetTimer();
+    void cyclePreset();
+    void start();
+    void pause();
+    void resume();
+    void stop();
+
+    bool isRunning() const;
+    bool isPaused() const;
+    int getCurrentPresetIndex() const;
+    int getCurrentPresetDuration() const;
+    unsigned long getRemainingMs() const;
+
+    void setPresets(const int* presets, int count);
+    void update();
 
 private:
-    //DisplayDriver& _display;
-    //LEDDriver& _ledDriver;
-    unsigned long _timerStartTime;
-    unsigned long _remainingTime;
-    bool _isRunning;
-    void _updateDisplay();
-}; */
+    int presetDurations[3]; 
+    int presetCount;
+    int currentPresetIdx;
+    bool running;
+    bool paused;
+    unsigned long endTime;
+    unsigned long pausedRemaining;
+
+    unsigned long nowMs() const;
+};
 
 #endif

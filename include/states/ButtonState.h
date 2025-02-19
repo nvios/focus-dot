@@ -1,13 +1,15 @@
 #ifndef BUTTON_STATE_H
 #define BUTTON_STATE_H
 
-enum AppState {
+enum AppState
+{
     STATE_IDLE,
-    STATE_CONFIG_MODE,
+    STATE_CYCLE_MODE,
     STATE_RESETTING
 };
 
-enum ButtonEvent {
+enum ButtonEvent
+{
     BUTTON_EVENT_NONE,
     BUTTON_EVENT_SINGLE_CLICK,
     BUTTON_EVENT_DOUBLE_CLICK,
@@ -19,18 +21,27 @@ class LED;
 class Display;
 class WiFiController;
 class ClockState;
+class State;
 
-class ButtonState {
+class ButtonState
+{
 public:
-    ButtonState(LED &led, Display &display, WiFiController &wifi, ClockState &clock);
+    ButtonState(LED &led,
+                Display &display,
+                WiFiController &wifi,
+                ClockState &clock,
+                State &appState);
+
     void handleEvent(ButtonEvent event);
-    void setState(AppState newState);
+
 private:
+    void setState(AppState newState);
+    AppState currentState;
     LED &led;
     Display &display;
     WiFiController &wifiController;
     ClockState &clock;
-    AppState currentState;
+    State &appState;
 };
 
 #endif

@@ -2,8 +2,10 @@
 #define DISPLAY_H
 
 #include <Arduino.h>
-#include <Adafruit_SSD1306.h>
+//#include <Adafruit_SSD1306.h>
+#include <Adafruit_SH110X.h>
 #include <configurations/Config.h>
+#include <states/TimerState.h>
 #include <vector>
 
 enum VAlign
@@ -37,13 +39,15 @@ public:
                        HAlign hAlign = HALIGN_CENTER);
 
   void drawClock(int hour, int min, const char *wDay, int mDay, int voc);
+  void drawTimer(const TimerState& timer);
   void drawEvent(const String &title,
                  const String &startTime,
                  const String &endTime,
                  int hoursToAdd);
 
 private:
-  Adafruit_SSD1306 display_;
+  //Adafruit_SSD1306 display_;
+  Adafruit_SH1106G display_;
   String addHours(const String &timeInput, int hoursToAdd);
   void splitTextIntoLines(const String &text, int maxWidth, int textSize, std::vector<String> &lines);
   int calculateTotalHeight(const std::vector<String> &lines, int textSize);

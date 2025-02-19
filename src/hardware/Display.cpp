@@ -1,8 +1,10 @@
 #include "hardware/Display.h"
+#include "states/TimerState.h"
 #include "assets/Fonts.h"
 #include <Wire.h>
 #include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+//#include <Adafruit_SSD1306.h>
+#include <Adafruit_SH110X.h>
 #include <vector>
 
 Display::Display()
@@ -13,7 +15,7 @@ Display::Display()
 bool Display::begin()
 {
     Wire.begin(SDA_PIN, SCL_PIN);
-    if (!display_.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+    if (!display_.begin(0x3C, true))
     {
         return false;
     }
@@ -124,7 +126,7 @@ int Display::writeAlignedText(const String &text,
 {
     display_.clearDisplay();
     display_.setTextSize(textSize);
-    display_.setTextColor(WHITE);
+    display_.setTextColor(SH110X_WHITE);
     display_.setTextWrap(false);
 
     String t = text;
@@ -193,7 +195,7 @@ void Display::drawClock(int hour, int min, const char *wDay, int mDay, int voc)
     uint16_t w, h;
 
     char dayBuf[5];
-    snprintf(dayBuf, sizeof(dayBuf), "%d", mDay);
+    snprintf(dayBuf, sizeof(dayBuf), "%02d", mDay);
     display_.setTextSize(2);
     display_.getTextBounds(dayBuf, 0, 0, &x1, &y1, &w, &h);
     int dayWidth = w;
@@ -253,5 +255,59 @@ void Display::drawEvent(const String &title,
     display_.print(sTime);
     display_.print(" > ");
     display_.println(eTime);
+    display_.display();
+}
+
+void Display::drawTimer(const TimerState &timer)
+{
+    display_.clearDisplay();
+
+    // If not running, show the current preset duration
+    unsigned long remainingMs = timer.getRemainingMs();
+    if(!timer.isRunning()) {
+        remainingMs = (unsigned long)timer.getCurrentPresetDuration() * 1000UL;
+    }
+
+    unsigned long totalSec = remainingMs / 1000UL;
+    unsigned int minutes = totalSec / 60;
+    unsigned int seconds = totalSec % 60;
+
+    char timeBuf[6];
+    snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d", minutes, seconds);
+
+    // Try size=5
+    display_.setTextSize(5);
+    int16_t x1, y1;
+    uint16_t w, h;
+    display_.getTextBounds(timeBuf, 0, 0, &x1, &y1, &w, &h);
+
+    int mainFontSize = 5;
+    if (w > 128) {
+        mainFontSize = 4;
+    }
+
+    display_.setTextSize(mainFontSize);
+    int line1Y = writeAlignedText(timeBuf, 128, 64, 0, 0, mainFontSize,
+                                  false, false, VALIGN_CENTER, HALIGN_CENTER);
+
+    // Show current preset
+    char presetBuf[6];
+    snprintf(presetBuf, sizeof(presetBuf), "P-%02d", timer.getCurrentPresetIndex() + 1);
+
+    int line2Y = line1Y + 8;
+    display_.setTextSize(1);
+    display_.setCursor((DISPLAY_WIDTH - 3 * 6) / 2, line2Y);
+    display_.print(presetBuf);
+
+    // Show messages
+    if (!timer.isRunning()) {
+        writeAlignedText("Double tap to start", 128, 64, 0, 64 - 10, 1,
+                         false, false, VALIGN_BOTTOM, HALIGN_CENTER);
+    } 
+    else if (timer.isPaused()) {
+        writeAlignedText("Tap to resume\nDouble tap to stop", 128, 64,
+                         0, 64 - 20, 1, false, false, VALIGN_BOTTOM, HALIGN_CENTER);
+    }
+
     display_.display();
 }
