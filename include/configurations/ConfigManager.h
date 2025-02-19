@@ -19,7 +19,7 @@ public:
     static DeviceConfig config;
     static void load();
     static void save();
-    static void reset(); // Factory reset for user settings
+    static void reset();
 };
 
 #endif

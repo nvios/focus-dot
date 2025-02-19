@@ -34,6 +34,7 @@ public:
                        int startY = 0,
                        int textSize = 2,
                        bool ellipsis = true,
+                       bool clearDisplay = true,
                        bool displayText = true,
                        VAlign vAlign = VALIGN_CENTER,
                        HAlign hAlign = HALIGN_CENTER);

@@ -11,9 +11,9 @@ MQTTController::MQTTController(State &appStateRef, LED &ledRef, Display &display
 
 void MQTTController::begin(int maxAttempts) {
     display.writeAlignedText("Syncing your events...");
-    if (mqttConnect(maxAttempts)) {
-        mqtt.subscribe(&eventFeed);
-    } else {
+    mqtt.subscribe(&eventFeed);
+    if (!mqttConnect(maxAttempts)) {
+        display.writeAlignedText("MQTT connection failed :(");
         Serial.println("MQTT connection failed; continuing anyway.");
     }
 }
@@ -29,6 +29,7 @@ void MQTTController::update(unsigned long now) {
     if (!mqtt.connected()) return;
     Adafruit_MQTT_Subscribe *sub = mqtt.readSubscription(50);
     if (sub == &eventFeed) {
+         Serial.println("Got an event!");
          parseEventJSON((char *)eventFeed.lastread);
          appState.setMode(AppMode::NOTIFICATION);
     }

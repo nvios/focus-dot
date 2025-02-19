@@ -3,7 +3,7 @@
 #include "assets/Fonts.h"
 #include <Wire.h>
 #include <Adafruit_GFX.h>
-//#include <Adafruit_SSD1306.h>
+// #include <Adafruit_SSD1306.h>
 #include <Adafruit_SH110X.h>
 #include <vector>
 
@@ -120,11 +120,13 @@ int Display::writeAlignedText(const String &text,
                               int startY,
                               int textSize,
                               bool ellipsis,
+                              bool clearDisplay,
                               bool displayText,
                               VAlign vAlign,
                               HAlign hAlign)
 {
-    display_.clearDisplay();
+    if (clearDisplay)
+        display_.clearDisplay();
     display_.setTextSize(textSize);
     display_.setTextColor(SH110X_WHITE);
     display_.setTextWrap(false);
@@ -173,10 +175,11 @@ int Display::writeAlignedText(const String &text,
             xOffset = startX + (maxWidth - w);
         display_.setCursor(xOffset, currentY - y1);
         display_.println(ln);
-        int lineSpacing = textSize; 
+        int lineSpacing = textSize;
         currentY += (h + lineSpacing);
     }
-    if(displayText) display_.display();
+    if (displayText)
+        display_.display();
     return currentY;
 }
 
@@ -187,7 +190,7 @@ void Display::drawClock(int hour, int min, const char *wDay, int mDay, int voc)
     char timeBuf[6];
     snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d", hour, min);
 
-    int line1Y = writeAlignedText(timeBuf, 128, 64, 0, 0, 5, false, false, VALIGN_CENTER, HALIGN_CENTER);
+    int line1Y = writeAlignedText(timeBuf, 128, 64, 0, 0, 5, false, true, false, VALIGN_CENTER, HALIGN_CENTER);
 
     int line2Y = line1Y + 10;
 
@@ -246,16 +249,15 @@ void Display::drawEvent(const String &title,
                         const String &endTime,
                         int hoursToAdd)
 {
-    int finalY = writeAlignedText(title.c_str(), 128, 64, 0, 0, 2, true, false, VALIGN_TOP, HALIGN_CENTER);
+    int finalY = writeAlignedText(title.c_str(), 128, 64, 0, 0, 2, true, true, false, VALIGN_TOP, HALIGN_CENTER);
     display_.setTextSize(2);
     display_.setCursor(0, 62);
 
     String sTime = addHours(startTime, hoursToAdd);
     String eTime = addHours(endTime, hoursToAdd);
-    display_.print(sTime);
-    display_.print(" > ");
-    display_.println(eTime);
-    display_.display();
+    String buffer = addHours(startTime, hoursToAdd) + " > " + addHours(endTime, hoursToAdd);
+
+    writeAlignedText(buffer.c_str(), 128, 64, 0, finalY + 10, 2, true, false, true, VALIGN_TOP, HALIGN_CENTER);
 }
 
 void Display::drawTimer(const TimerState &timer)
@@ -264,7 +266,8 @@ void Display::drawTimer(const TimerState &timer)
 
     // If not running, show the current preset duration
     unsigned long remainingMs = timer.getRemainingMs();
-    if(!timer.isRunning()) {
+    if (!timer.isRunning())
+    {
         remainingMs = (unsigned long)timer.getCurrentPresetDuration() * 1000UL;
     }
 
@@ -282,13 +285,14 @@ void Display::drawTimer(const TimerState &timer)
     display_.getTextBounds(timeBuf, 0, 0, &x1, &y1, &w, &h);
 
     int mainFontSize = 5;
-    if (w > 128) {
+    if (w > 128)
+    {
         mainFontSize = 4;
     }
 
     display_.setTextSize(mainFontSize);
     int line1Y = writeAlignedText(timeBuf, 128, 64, 0, 0, mainFontSize,
-                                  false, false, VALIGN_CENTER, HALIGN_CENTER);
+                                  false, true, false, VALIGN_CENTER, HALIGN_CENTER);
 
     // Show current preset
     char presetBuf[6];
@@ -300,13 +304,15 @@ void Display::drawTimer(const TimerState &timer)
     display_.print(presetBuf);
 
     // Show messages
-    if (!timer.isRunning()) {
+    if (!timer.isRunning())
+    {
         writeAlignedText("Double tap to start", 128, 64, 0, 64 - 10, 1,
-                         false, false, VALIGN_BOTTOM, HALIGN_CENTER);
-    } 
-    else if (timer.isPaused()) {
+                         false, true, false, VALIGN_BOTTOM, HALIGN_CENTER);
+    }
+    else if (timer.isPaused())
+    {
         writeAlignedText("Tap to resume\nDouble tap to stop", 128, 64,
-                         0, 64 - 20, 1, false, false, VALIGN_BOTTOM, HALIGN_CENTER);
+                         0, 64 - 20, 1, false, true, false, VALIGN_BOTTOM, HALIGN_CENTER);
     }
 
     display_.display();
