@@ -190,7 +190,7 @@ void Display::drawClock(int hour, int min, const char *wDay, int mDay, int voc)
     char timeBuf[6];
     snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d", hour, min);
 
-    int line1Y = writeAlignedText(timeBuf, 128, 64, 0, 0, 5, false, true, false, VALIGN_CENTER, HALIGN_CENTER);
+    int line1Y = writeAlignedText(timeBuf, 128, 64, 0, 8, 5, false, true, false, VALIGN_TOP, HALIGN_CENTER);
 
     int line2Y = line1Y + 10;
 

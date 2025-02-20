@@ -1,22 +1,22 @@
-#ifndef VOC_DRIVER_H
-#define VOC_DRIVER_H
+#ifndef VOC_H
+#define VOC_H
 
-#include <DFRobot_SGP40.h>
 #include "LED.h"
+#include <DFRobot_SGP40.h>
 
 class VOC
 {
 public:
-    VOC(LED& led);
+    VOC(LED &led);
     void begin();
     int readVOC();
 
 private:
-    LED& _led;
-    DFRobot_SGP40 _sgp40;
+    LED &_led;
     unsigned long lastVocUpdate;
-    int cycleIndex;
     int _vocVal;
+    LEDState _lastVocRange;
+    DFRobot_SGP40 _sgp40;
 };
 
 #endif

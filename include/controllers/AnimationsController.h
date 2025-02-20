@@ -1,5 +1,3 @@
-#pragma once
-
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
@@ -11,7 +9,7 @@ class Animation
 {
 public:
     Animation(Adafruit_SSD1306 *display);
-    void start(const byte *frames, int frameCount, bool loop, bool reverse, unsigned long durationMs, int width, int height); // Moved reverse parameter
+    void start(const byte *frames, int frameCount, bool loop, bool reverse, unsigned long durationMs, int width, int height);
     void update();
     bool isRunning();
 

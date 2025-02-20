@@ -28,7 +28,7 @@ private:
     Adafruit_MQTT_Client mqtt;
     Adafruit_MQTT_Subscribe eventFeed;
 
-    String eventTitle, eventStart, eventEnd;
+    String eventTitle, eventStart, eventEnd, message;
     bool showEvent = false, eventDisplayed = false;
     unsigned long eventDisplayStart = 0;
 };
