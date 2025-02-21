@@ -1,7 +1,7 @@
 #include "states/State.h"
 
 State::State()
-    : currentMode(AppMode::CLOCK) {}
+    : currentMode(AppMode::ANIMATION) {}
 
 void State::cycleMode()
 {

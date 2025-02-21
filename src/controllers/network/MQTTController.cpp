@@ -38,7 +38,7 @@ void MQTTController::update(unsigned long now)
     if (sub == &eventFeed)
     {
         parseEventJSON((char *)eventFeed.lastread);
-        led.setLEDState(LEDState::EVENT_RAINBOW);
+        led.setLEDState(LEDState::SPIN_RAINBOW);
         eventDisplayStart = now;
         eventDisplayed = true;
         if (message == "")

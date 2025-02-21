@@ -8,11 +8,13 @@
 enum class LEDState
 {
     IDLE,
-    EVENT_RAINBOW,
-    VOC_GREEN,
-    VOC_YELLOW,
-    VOC_RED,
-    VOC_RED_PULSE
+    SPIN_RAINBOW,
+    SPIN_GREEN,
+    SPIN_YELLOW,
+    SPIN_RED,
+    PULSE_RED,
+    PULSE_BLUE,
+    SOLID_BLUE
 };
 
 class LED
@@ -23,6 +25,7 @@ public:
     void setLEDState(LEDState newState);
     void update();
     LEDState getLEDState() const { return _currentLEDState; }
+    void displaySolidColor(uint8_t R, uint8_t G, uint8_t B, uint8_t brightness);
 
 private:
     Adafruit_NeoPixel _ring;
@@ -38,7 +41,7 @@ private:
     void animateTailFade(std::function<uint32_t(int)> colorFunc, uint8_t tailLen = 9, unsigned long stepTime = 120);
     void animateRainbowTail();
     void animateSolidTail(uint8_t R, uint8_t G, uint8_t B);
-    void animateRedPulse();
+    void animatePulse(uint8_t R, uint8_t G, uint8_t B);
 };
 
 #endif
