@@ -19,39 +19,48 @@ bool Display::begin()
     return true;
 }
 
-void Display::splitTextIntoLines(const String &text, int maxWidth, int textSize, std::vector<String> &lines) {
+void Display::splitTextIntoLines(const String &text, int maxWidth, int textSize, std::vector<String> &lines)
+{
     lines.clear();
     String currentLine;
     int i = 0;
-    while (i < text.length()) {
+    while (i < text.length())
+    {
         int nextSpace = text.indexOf(' ', i);
         int nextNewline = text.indexOf('\n', i);
-        
+
         int breakPos = -1;
         bool isNewline = false;
-        if (nextNewline != -1 && (nextSpace == -1 || nextNewline < nextSpace)) {
+        if (nextNewline != -1 && (nextSpace == -1 || nextNewline < nextSpace))
+        {
             breakPos = nextNewline;
             isNewline = true;
-        } else {
+        }
+        else
+        {
             breakPos = (nextSpace != -1) ? nextSpace : text.length();
         }
-        
+
         String word = text.substring(i, breakPos);
         i = breakPos + 1;
-        
+
         String testLine = currentLine.isEmpty() ? word : currentLine + " " + word;
         int16_t x1, y1;
         uint16_t w, h;
         display_.setTextSize(textSize);
         display_.getTextBounds(testLine.c_str(), 0, 0, &x1, &y1, &w, &h);
-        if (w > (uint16_t)maxWidth) {
+        if (w > (uint16_t)maxWidth)
+        {
             if (!currentLine.isEmpty())
                 lines.push_back(currentLine);
             currentLine = word;
-        } else {
+        }
+        else
+        {
             currentLine = testLine;
         }
-        if (isNewline) {
+        if (isNewline)
+        {
             lines.push_back(currentLine);
             currentLine = "";
         }
@@ -248,127 +257,105 @@ void Display::drawTimer(const TimerState &timer)
     display_.display();
 }
 
-void Display::startAnimation(const byte *frames, int frameCount, bool loop, bool reverse, bool boomerang, unsigned long loopDelay, unsigned long durationMs, int width, int height)
+void Display::startAnimation(const byte *frames, int frameCount, bool loop, bool reverse, unsigned long durationMs, int width, int height)
 {
-    animFrames = frames;
-    animFrameCount = frameCount;
-    animLoop = loop;
-    animReverse = reverse;
-    animBoomerang = boomerang;
-    animLoopDelay = loopDelay;
-    animFrameWidth = width;
-    animFrameHeight = height;
-    animFrameDelay = DEFAULT_FRAME_DELAY;
-    animDuration = (durationMs == 0) ? frameCount * animFrameDelay : durationMs;
-    animStartTime = millis();
-    animLastFrameTime = millis();
+    animationFrames = frames;
+    totalFrames = frameCount;
+    loopAnimation = loop;
+    playInReverse = reverse;
+    animationRunning = true;
 
-    if (animBoomerang)
+    currentFrame = playInReverse ? totalFrames - 1 : 0;
+
+    frameWidth = width;
+    frameHeight = height;
+    frameDelay = 100;
+
+    if (durationMs == 0)
     {
-        animForward = !reverse;
-        animCurrentFrame = (animForward ? 0 : animFrameCount - 1);
+        animationDuration = totalFrames * frameDelay;
     }
     else
     {
-        animCurrentFrame = (reverse ? animFrameCount - 1 : 0);
+        animationDuration = durationMs;
     }
 
-    int frameX = (display_.width() - animFrameWidth) / 2;
-    int frameY = (display_.height() - animFrameHeight) / 2;
-    int frameSize = (animFrameWidth * animFrameHeight) / 8;
+    animationStartTime = millis();
+    lastFrameTime = millis();
+
+    frameX = (display_.width() - frameWidth) / 2;
+    frameY = (display_.height() - frameHeight) / 2;
+    frameSize = (frameWidth * frameHeight) / 8;
+
     display_.clearDisplay();
-    display_.drawBitmap(frameX, frameY, animFrames + (animCurrentFrame * frameSize), animFrameWidth, animFrameHeight, SH110X_WHITE);
+    display_.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize], frameWidth, frameHeight, SH110X_WHITE);
     display_.display();
 }
 
 void Display::updateAnimation()
 {
-    if (animFrameCount <= 0)
+    if (!animationRunning)
         return;
+
     unsigned long currentTime = millis();
 
-    if (currentTime - animLastFrameTime < animFrameDelay)
+    if (currentTime - animationStartTime >= animationDuration)
+    {
+        animationRunning = false;
         return;
+    }
 
-    if (!animBoomerang)
+    if (currentTime - lastFrameTime >= frameDelay)
     {
-        if (!animReverse)
+        lastFrameTime = currentTime;
+
+        if (playInReverse)
         {
-            animCurrentFrame++;
-            if (animCurrentFrame >= animFrameCount)
+            currentFrame--;
+            if (currentFrame < 0)
             {
-                if (animLoop)
-                    animCurrentFrame = 0;
+                if (loopAnimation)
+                {
+                    currentFrame = totalFrames - 1;
+                }
                 else
                 {
-                    animFrameCount = 0;
+                    animationRunning = false;
                     return;
                 }
             }
         }
         else
         {
-            animCurrentFrame--;
-            if (animCurrentFrame < 0)
+            currentFrame++;
+            if (currentFrame >= totalFrames)
             {
-                if (animLoop)
-                    animCurrentFrame = animFrameCount - 1;
+                if (loopAnimation)
+                {
+                    currentFrame = 0;
+                }
                 else
                 {
-                    animFrameCount = 0;
+                    animationRunning = false;
                     return;
                 }
             }
         }
-        animLastFrameTime = currentTime;
-    }
-    else
-    {
-        if (animForward)
-        {
-            if (animCurrentFrame < animFrameCount - 1)
-            {
-                animCurrentFrame++;
-                animLastFrameTime = currentTime;
-            }
-            else
-            {
-                animForward = false;
-                animCurrentFrame = (animFrameCount > 1) ? animFrameCount - 2 : 0;
-                animLastFrameTime = currentTime;
-            }
-        }
-        else
-        {
-            if (animCurrentFrame > 0)
-            {
-                animCurrentFrame--;
-                animLastFrameTime = currentTime;
-            }
-            else
-            {
-                if (currentTime - animLastFrameTime < animFrameDelay + animLoopDelay)
-                    return;
-                animForward = true;
-                animCurrentFrame = (animFrameCount > 1) ? 1 : 0;
-                animLastFrameTime = currentTime;
-            }
-        }
-    }
 
-    int frameX = (display_.width() - animFrameWidth) / 2;
-    int frameY = (display_.height() - animFrameHeight) / 2;
-    int frameSize = (animFrameWidth * animFrameHeight) / 8;
-    display_.clearDisplay();
-    display_.drawBitmap(frameX, frameY, animFrames + (animCurrentFrame * frameSize), animFrameWidth, animFrameHeight, SH110X_WHITE);
-    display_.display();
+        int frameSize = (frameWidth * frameHeight) / 8;
+
+        display_.clearDisplay();
+        display_.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize], frameWidth, frameHeight, SH110X_WHITE);
+        display_.display();
+    }
 }
 
 bool Display::isAnimationRunning()
 {
-    return (animFrameCount > 0);
+    return animationRunning;
 }
 
-Adafruit_SH1106G& Display::getHardware() {
-  return display_;
+Adafruit_SH1106G &Display::getHardware()
+{
+    return display_;
 }

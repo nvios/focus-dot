@@ -1,10 +1,6 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
-#define DEFAULT_FRAME_WIDTH 128
-#define DEFAULT_FRAME_HEIGHT 64
-#define DEFAULT_FRAME_DELAY 64
-
 #include <Arduino.h>
 #include <Adafruit_SH110X.h>
 #include <configurations/Config.h>
@@ -24,9 +20,10 @@ enum HAlign
   HALIGN_RIGHT
 };
 
-class Display {
+class Display
+{
 public:
-  Adafruit_SH1106G& getHardware();
+  Adafruit_SH1106G &getHardware();
   Display();
   bool begin();
   int writeAlignedText(const String &text,
@@ -45,7 +42,7 @@ public:
   void drawTimer(const TimerState &timer);
   void drawEvent(const String &title, const String &startTime, const String &endTime, int hoursToAdd);
 
-  void startAnimation(const byte* frames, int frameCount, bool loop, bool reverse, bool boomerang, unsigned long loopDelay, unsigned long durationMs, int width, int height);
+  void startAnimation(const byte *frames, int frameCount, bool loop, bool reverse, unsigned long durationMs, int width, int height);
   void updateAnimation();
   bool isAnimationRunning();
 
@@ -56,21 +53,21 @@ private:
   int calculateTotalHeight(const std::vector<String> &lines, int textSize);
   void ellipsizeLinesToFit(std::vector<String> &lines, int maxHeight, int textSize);
 
-
- const byte* animFrames = nullptr;
-  int animFrameCount = 0;
-  int animCurrentFrame = 0;
-  int animFrameWidth = 0;
-  int animFrameHeight = 0;
-  bool animLoop = false;
-  bool animReverse = false;
-  bool animBoomerang = false;
-  bool animForward = true;
-  unsigned long animStartTime = 0;
-  unsigned long animLastFrameTime = 0;
-  unsigned long animDuration = 0;
-  unsigned long animFrameDelay = DEFAULT_FRAME_DELAY;
-  unsigned long animLoopDelay = 0;
+  const byte *animationFrames;
+  int totalFrames;
+  int currentFrame;
+  int frameWidth;
+  int frameHeight;
+  int frameX;
+  int frameY;
+  int frameSize;
+  bool animationRunning;
+  bool loopAnimation;
+  bool playInReverse;
+  unsigned long animationStartTime;
+  unsigned long lastFrameTime;
+  unsigned long animationDuration;
+  unsigned long frameDelay;
 };
 
 #endif

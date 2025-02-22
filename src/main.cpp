@@ -40,6 +40,11 @@ void setup()
 
     display.begin();
     animationsController = new AnimationsController(display.getHardware());
+    display.startAnimation((const byte *)logo2, 21, false, false, 0, 128, 64);
+    while (display.isAnimationRunning())
+    {
+        display.updateAnimation();
+    }
     led.begin();
     voc.begin();
     button.begin();
