@@ -16,7 +16,7 @@ void LED::begin()
     _ring.begin();
     _ring.clear();
     _ring.show();
-    _currentLEDState = LEDState::IDLE;
+    _currentLEDState = LEDState::PULSE_BLUE;
 }
 
 void LED::setLEDState(LEDState newState)
@@ -73,7 +73,7 @@ void LED::update()
             animatePulse(0, 64, 255);
         break;
     case LEDState::SOLID_BLUE:
-        displaySolidColor(0, 0, 255, 30);
+        displaySolidColor(0, 0, 255, 2);
         break;
     case LEDState::IDLE:
     default:

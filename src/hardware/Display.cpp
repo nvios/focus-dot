@@ -368,3 +368,7 @@ bool Display::isAnimationRunning()
 {
     return (animFrameCount > 0);
 }
+
+Adafruit_SH1106G& Display::getHardware() {
+  return display_;
+}

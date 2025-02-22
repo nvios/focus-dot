@@ -26,6 +26,7 @@ enum HAlign
 
 class Display {
 public:
+  Adafruit_SH1106G& getHardware();
   Display();
   bool begin();
   int writeAlignedText(const String &text,

@@ -9,6 +9,7 @@
 #include "controllers/network/WiFiController.h"
 #include "controllers/network/NTPController.h"
 #include "controllers/network/MQTTController.h"
+#include "controllers/AnimationsController.h"
 #include "states/ClockState.h"
 #include "states/State.h"
 #include "assets/Bitmaps.h"
@@ -20,6 +21,7 @@ VOC voc(led);
 State appState;
 WiFiController wifiController(display);
 MQTTController mqttController(appState, led, display);
+AnimationsController *animationsController = nullptr;
 ClockState clockState(display, voc);
 ButtonState buttonState(led, display, wifiController, clockState, appState);
 Button button(BUTTON_PIN, true, buttonState);
@@ -29,61 +31,71 @@ static unsigned long lastLedUpdate = 0;
 static unsigned long lastDisplayUpdate = 0;
 static unsigned long lastMqttCheck = 0;
 
-void setup() {
-  Serial.begin(115200);
-  delay(1000);
-  ConfigManager::load();
-  display.begin();
-  led.begin();
-  led.setLEDState(LEDState::PULSE_BLUE);
-  voc.begin();
+void setup()
+{
+    Serial.begin(115200);
+    delay(1000);
 
-  if (!wifiController.begin(WIFI_SSID, WIFI_PASS)) {
-    Serial.println("Wi-Fi connection failed...");
-    display.writeAlignedText("Connection timeout. Restarting...");
-    delay(2000);
-    ESP.restart();
-  }
-  mqttController.begin(1);
-  display.writeAlignedText("Checking the time...");
-  setupTime(NTP_SERVER);
-  if (!syncTime(10000)) {
-    Serial.println("Time sync failed, continuing anyway.");
-    display.writeAlignedText("Time sync failed :(");
-  }
-  button.begin();
+    ConfigManager::load();
+
+    display.begin();
+    animationsController = new AnimationsController(display.getHardware());
+    led.begin();
+    voc.begin();
+    button.begin();
+
+    if (!wifiController.begin(WIFI_SSID, WIFI_PASS))
+    {
+        Serial.println("Wi-Fi connection failed...");
+        display.writeAlignedText("Connection timeout. Restarting...");
+        delay(2000);
+        ESP.restart();
+    }
+    mqttController.begin(1);
+    display.writeAlignedText("Checking the time...");
+    setupTime(NTP_SERVER);
+    if (!syncTime(10000))
+    {
+        Serial.println("Time sync failed, continuing anyway.");
+        display.writeAlignedText("Time sync failed :(");
+    }
 }
 
-void loop() {
-  button.tick();
-  unsigned long now = millis();
-  if (now - lastLedUpdate >= 50) {
-    lastLedUpdate = now;
-    led.update();
-  }
-  if (now - lastMqttCheck >= MQTT_RETRY_FREQUENCY_MS) {
-    lastMqttCheck = now;
-    mqttController.checkConnection(3); 
-  }
-  mqttController.update(now);
+void loop()
+{
+    button.tick();
+    unsigned long now = millis();
+    if (now - lastLedUpdate >= 50)
+    {
+        lastLedUpdate = now;
+        led.update();
+    }
+    if (now - lastMqttCheck >= MQTT_RETRY_FREQUENCY_MS)
+    {
+        lastMqttCheck = now;
+        mqttController.checkConnection(3);
+    }
+    mqttController.update(now);
 
-  if (appState.getMode() == AppMode::TIMER) {
-    appState.getTimer().update();
-    display.drawTimer(appState.getTimer());
-  }
-  else if (appState.getMode() == AppMode::CLOCK) {
-    clockState.update();
-  }
-  else if (appState.getMode() == AppMode::ANIMATION) {
-    if(led.getLEDState() != LEDState::SOLID_BLUE) {
-      led.setLEDState(LEDState::SOLID_BLUE); 
+    if (appState.getMode() == AppMode::TIMER)
+    {
+        appState.getTimer().update();
+        display.drawTimer(appState.getTimer());
     }
-    if (!display.isAnimationRunning()) {
-      display.startAnimation((const byte*)blink, 5, true, false, true, 5000, 0, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
+    else if (appState.getMode() == AppMode::CLOCK)
+    {
+        clockState.update();
     }
-    display.updateAnimation();
-  }
-  else if (appState.getMode() == AppMode::DIALOGUE) {
-    display.writeAlignedText("Dialogue mode!");
-  }
+    else if (appState.getMode() == AppMode::ANIMATION)
+    {
+        if (led.getLEDState() != LEDState::SOLID_BLUE)
+        {
+            led.setLEDState(LEDState::SOLID_BLUE);
+        }
+        animationsController->update();
+    }
+    else if (appState.getMode() == AppMode::DIALOGUE)
+    {
+        display.writeAlignedText("Dialogue mode!");
+    }
 }
