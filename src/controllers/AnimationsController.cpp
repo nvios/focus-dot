@@ -2,6 +2,8 @@
 
 AnimationsController::AnimationsController(Adafruit_SH1106G &disp) : display(disp)
 {
+    // Initialize eyes animation state
+    mode = EYES;
     blinkState = OPEN;
     blinkStartTime = millis();
     eyeScale = 1.0;
@@ -21,13 +23,37 @@ AnimationsController::AnimationsController(Adafruit_SH1106G &disp) : display(dis
     targetCenterX = currentCenterX;
     targetCenterY = currentCenterY;
     isShifting = false;
+
+    // Initialize bitmap animation state as not running
+    animationFrames = nullptr;
+    totalFrames = 0;
+    loopAnimation = false;
+    playInReverse = false;
+    bitmapAnimationRunning = false;
+    currentFrame = 0;
+    frameWidth = frameHeight = 0;
+    frameDelay = 100;
+    animationDuration = 0;
+    animationStartTime = lastFrameTime = 0;
+    frameX = frameY = frameSize = 0;
 }
 
 void AnimationsController::update()
 {
+    if (mode == BITMAP)
+    {
+        updateBitmapAnimation();
+    }
+    else
+    {
+        updateEyesAnimation();
+    }
+}
+
+void AnimationsController::updateEyesAnimation()
+{
     unsigned long now = millis();
 
-    // Blink state machine
     switch (blinkState)
     {
     case OPEN:
@@ -72,7 +98,6 @@ void AnimationsController::update()
     }
     }
 
-    // Smooth shifting of eye center position
     if (!isShifting && (now - lastShiftTime >= SHIFT_INTERVAL))
     {
         int idx = random(numCenters);
@@ -96,7 +121,7 @@ void AnimationsController::update()
         currentCenterY = startCenterY + f * (targetCenterY - startCenterY);
     }
 
-    // Draw the eyes animation
+    // Draw eyes animation
     display.clearDisplay();
     float anchorFraction = 0.75;
     float fixedAnchorY = currentCenterY - baseHeight / 2 + anchorFraction * baseHeight;
@@ -108,4 +133,98 @@ void AnimationsController::update()
     display.fillRoundRect(leftEyeX, leftEyeY, baseWidth, baseHeight * eyeScale, borderRadius, SH110X_WHITE);
     display.fillRoundRect(rightEyeX, rightEyeY, baseWidth, baseHeight * eyeScale, borderRadius, SH110X_WHITE);
     display.display();
+}
+
+void AnimationsController::startBitmapAnimation(const byte *frames, int frameCount, bool loop, bool reverse, unsigned long durationMs, int width, int height)
+{
+    mode = BITMAP;
+    animationFrames = frames;
+    totalFrames = frameCount;
+    loopAnimation = loop;
+    playInReverse = reverse;
+    bitmapAnimationRunning = true;
+    currentFrame = playInReverse ? totalFrames - 1 : 0;
+    frameWidth = width;
+    frameHeight = height;
+    frameDelay = 100;
+    animationDuration = (durationMs == 0) ? totalFrames * frameDelay : durationMs;
+    animationStartTime = millis();
+    lastFrameTime = millis();
+    frameX = (display.width() - frameWidth) / 2;
+    frameY = (display.height() - frameHeight) / 2;
+    frameSize = (frameWidth * frameHeight) / 8;
+
+    display.clearDisplay();
+    display.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize], frameWidth, frameHeight, SH110X_WHITE);
+    display.display();
+}
+
+void AnimationsController::updateBitmapAnimation()
+{
+    if (!bitmapAnimationRunning)
+        return;
+
+    unsigned long currentTime = millis();
+    if (currentTime - animationStartTime >= animationDuration)
+    {
+        bitmapAnimationRunning = false;
+        mode = EYES; // Switch back to eyes animation
+        return;
+    }
+    if (currentTime - lastFrameTime >= frameDelay)
+    {
+        lastFrameTime = currentTime;
+        if (playInReverse)
+        {
+            currentFrame--;
+            if (currentFrame < 0)
+            {
+                if (loopAnimation)
+                    currentFrame = totalFrames - 1;
+                else
+                {
+                    bitmapAnimationRunning = false;
+                    mode = EYES;
+                    return;
+                }
+            }
+        }
+        else
+        {
+            currentFrame++;
+            if (currentFrame >= totalFrames)
+            {
+                if (loopAnimation)
+                    currentFrame = 0;
+                else
+                {
+                    bitmapAnimationRunning = false;
+                    mode = EYES;
+                    return;
+                }
+            }
+        }
+        display.clearDisplay();
+        display.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize], frameWidth, frameHeight, SH110X_WHITE);
+        display.display();
+    }
+}
+
+bool AnimationsController::isBitmapAnimationRunning()
+{
+    return bitmapAnimationRunning;
+}
+
+void AnimationsController::startEyesAnimation()
+{
+    mode = EYES;
+    blinkState = OPEN;
+    blinkStartTime = millis();
+    eyeScale = 1.0;
+    lastShiftTime = millis();
+    currentCenterX = centers[0][0];
+    currentCenterY = centers[0][1];
+    targetCenterX = currentCenterX;
+    targetCenterY = currentCenterY;
+    isShifting = false;
 }

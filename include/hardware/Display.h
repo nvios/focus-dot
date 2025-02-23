@@ -1,29 +1,29 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
+#define DEFAULT_FRAME_WIDTH 128
+#define DEFAULT_FRAME_HEIGHT 64
+#define DEFAULT_FRAME_DELAY 64
+
 #include <Arduino.h>
 #include <Adafruit_SH110X.h>
 #include <configurations/Config.h>
 #include <states/TimerState.h>
 #include <vector>
 
-enum VAlign
-{
+enum VAlign {
   VALIGN_TOP,
   VALIGN_CENTER,
   VALIGN_BOTTOM
 };
-enum HAlign
-{
+enum HAlign {
   HALIGN_LEFT,
   HALIGN_CENTER,
   HALIGN_RIGHT
 };
 
-class Display
-{
+class Display {
 public:
-  Adafruit_SH1106G &getHardware();
   Display();
   bool begin();
   int writeAlignedText(const String &text,
@@ -42,9 +42,8 @@ public:
   void drawTimer(const TimerState &timer);
   void drawEvent(const String &title, const String &startTime, const String &endTime, int hoursToAdd);
 
-  void startAnimation(const byte *frames, int frameCount, bool loop, bool reverse, unsigned long durationMs, int width, int height);
-  void updateAnimation();
-  bool isAnimationRunning();
+  // Expose the underlying hardware display for AnimationsController.
+  Adafruit_SH1106G& getHardware();
 
 private:
   Adafruit_SH1106G display_;
@@ -52,22 +51,6 @@ private:
   void splitTextIntoLines(const String &text, int maxWidth, int textSize, std::vector<String> &lines);
   int calculateTotalHeight(const std::vector<String> &lines, int textSize);
   void ellipsizeLinesToFit(std::vector<String> &lines, int maxHeight, int textSize);
-
-  const byte *animationFrames;
-  int totalFrames;
-  int currentFrame;
-  int frameWidth;
-  int frameHeight;
-  int frameX;
-  int frameY;
-  int frameSize;
-  bool animationRunning;
-  bool loopAnimation;
-  bool playInReverse;
-  unsigned long animationStartTime;
-  unsigned long lastFrameTime;
-  unsigned long animationDuration;
-  unsigned long frameDelay;
 };
 
 #endif

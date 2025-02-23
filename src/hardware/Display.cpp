@@ -28,7 +28,6 @@ void Display::splitTextIntoLines(const String &text, int maxWidth, int textSize,
     {
         int nextSpace = text.indexOf(' ', i);
         int nextNewline = text.indexOf('\n', i);
-
         int breakPos = -1;
         bool isNewline = false;
         if (nextNewline != -1 && (nextSpace == -1 || nextNewline < nextSpace))
@@ -40,10 +39,8 @@ void Display::splitTextIntoLines(const String &text, int maxWidth, int textSize,
         {
             breakPos = (nextSpace != -1) ? nextSpace : text.length();
         }
-
         String word = text.substring(i, breakPos);
         i = breakPos + 1;
-
         String testLine = currentLine.isEmpty() ? word : currentLine + " " + word;
         int16_t x1, y1;
         uint16_t w, h;
@@ -255,104 +252,6 @@ void Display::drawTimer(const TimerState &timer)
     else if (timer.isPaused())
         writeAlignedText("Tap to resume\nDouble tap to stop", 128, 64, 0, 64 - 20, 1, false, true, false, VALIGN_BOTTOM, HALIGN_CENTER);
     display_.display();
-}
-
-void Display::startAnimation(const byte *frames, int frameCount, bool loop, bool reverse, unsigned long durationMs, int width, int height)
-{
-    animationFrames = frames;
-    totalFrames = frameCount;
-    loopAnimation = loop;
-    playInReverse = reverse;
-    animationRunning = true;
-
-    currentFrame = playInReverse ? totalFrames - 1 : 0;
-
-    frameWidth = width;
-    frameHeight = height;
-    frameDelay = 100;
-
-    if (durationMs == 0)
-    {
-        animationDuration = totalFrames * frameDelay;
-    }
-    else
-    {
-        animationDuration = durationMs;
-    }
-
-    animationStartTime = millis();
-    lastFrameTime = millis();
-
-    frameX = (display_.width() - frameWidth) / 2;
-    frameY = (display_.height() - frameHeight) / 2;
-    frameSize = (frameWidth * frameHeight) / 8;
-
-    display_.clearDisplay();
-    display_.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize], frameWidth, frameHeight, SH110X_WHITE);
-    display_.display();
-}
-
-void Display::updateAnimation()
-{
-    if (!animationRunning)
-        return;
-
-    unsigned long currentTime = millis();
-
-    if (currentTime - animationStartTime >= animationDuration)
-    {
-        animationRunning = false;
-        return;
-    }
-
-    if (currentTime - lastFrameTime >= frameDelay)
-    {
-        lastFrameTime = currentTime;
-
-        if (playInReverse)
-        {
-            currentFrame--;
-            if (currentFrame < 0)
-            {
-                if (loopAnimation)
-                {
-                    currentFrame = totalFrames - 1;
-                }
-                else
-                {
-                    animationRunning = false;
-                    return;
-                }
-            }
-        }
-        else
-        {
-            currentFrame++;
-            if (currentFrame >= totalFrames)
-            {
-                if (loopAnimation)
-                {
-                    currentFrame = 0;
-                }
-                else
-                {
-                    animationRunning = false;
-                    return;
-                }
-            }
-        }
-
-        int frameSize = (frameWidth * frameHeight) / 8;
-
-        display_.clearDisplay();
-        display_.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize], frameWidth, frameHeight, SH110X_WHITE);
-        display_.display();
-    }
-}
-
-bool Display::isAnimationRunning()
-{
-    return animationRunning;
 }
 
 Adafruit_SH1106G &Display::getHardware()

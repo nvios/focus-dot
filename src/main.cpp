@@ -28,23 +28,24 @@ Button button(BUTTON_PIN, true, buttonState);
 
 // Timing variables
 static unsigned long lastLedUpdate = 0;
-static unsigned long lastDisplayUpdate = 0;
 static unsigned long lastMqttCheck = 0;
 
 void setup()
 {
     Serial.begin(115200);
     delay(1000);
-
     ConfigManager::load();
-
     display.begin();
+
     animationsController = new AnimationsController(display.getHardware());
-    display.startAnimation((const byte *)logo2, 21, false, false, 0, 128, 64);
-    while (display.isAnimationRunning())
+
+    // Blocking startup: play logo animation and wait for it to finish.
+    animationsController->startBitmapAnimation((const byte *)logo2, 21, false, false, 0, 128, 64);
+    while (animationsController->isBitmapAnimationRunning())
     {
-        display.updateAnimation();
+        animationsController->update();
     }
+
     led.begin();
     voc.begin();
     button.begin();
@@ -94,9 +95,8 @@ void loop()
     else if (appState.getMode() == AppMode::ANIMATION)
     {
         if (led.getLEDState() != LEDState::SOLID_BLUE)
-        {
             led.setLEDState(LEDState::SOLID_BLUE);
-        }
+        animationsController->startEyesAnimation();
         animationsController->update();
     }
     else if (appState.getMode() == AppMode::DIALOGUE)
