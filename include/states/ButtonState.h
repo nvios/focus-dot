@@ -37,6 +37,8 @@ public:
 private:
     void setState(AppState newState);
     int presetNumber;
+    unsigned long resetModeEnteredTime;
+    bool ignoreNextClick;
     AppState currentState;
     LED &led;
     Display &display;

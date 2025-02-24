@@ -39,7 +39,6 @@ void setup()
 
     animationsController = new AnimationsController(display.getHardware());
 
-    // Blocking startup: play logo animation and wait for it to finish.
     animationsController->startBitmapAnimation((const byte *)logo2, 21, false, false, 0, 128, 64);
     while (animationsController->isBitmapAnimationRunning())
     {
@@ -83,7 +82,6 @@ void loop()
     }
     mqttController.update(now);
 
-    // Update display based on current app mode.
     switch (appState.getMode())
     {
     case AppMode::CLOCK:
@@ -99,7 +97,7 @@ void loop()
         animationsController->update();
         break;
     case AppMode::DIALOGUE:
-        // Display the dialogue message (set by ButtonState) continuously.
         display.writeAlignedText(appState.getDialogueMessage(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
-        break;}
+        break;
+    }
 }

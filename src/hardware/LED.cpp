@@ -2,8 +2,8 @@
 #include "hardware/Display.h"
 #include <math.h>
 
-const unsigned long LED::EVENT_ANIMATION_MS = 60000;
-const unsigned long LED::VOC_ANIMATION_MS = 20000;
+const unsigned long LED::EVENT_ANIMATION_MS = 45000;
+const unsigned long LED::VOC_ANIMATION_MS = 10000;
 const unsigned long LED::VOC_RED_PULSE_MS = 300000;
 
 LED::LED(uint8_t pin, uint16_t numPixels)

@@ -17,12 +17,19 @@ ButtonState::ButtonState(LED &led,
       display(display),
       wifiController(wifi),
       clock(clock),
-      appState(appState)
+      appState(appState),
+      resetModeEnteredTime(0)
 {
 }
 
 void ButtonState::handleEvent(ButtonEvent event)
 {
+    // If in RESET state, ignore any events during the dead time.
+    if (currentState == STATE_RESET && (millis() - resetModeEnteredTime < 1000))
+    {
+        return;
+    }
+
     // --- Part A: Local Button FSM transitions ---
     switch (currentState)
     {
@@ -53,7 +60,7 @@ void ButtonState::handleEvent(ButtonEvent event)
             Serial.println("Performing Factory Reset");
             ESP.restart();
         }
-        break;
+        return; // In RESET state, we process only those events.
     default:
         setState(STATE_IDLE);
         break;
@@ -67,9 +74,9 @@ void ButtonState::handleEvent(ButtonEvent event)
         {
             // Switch to timer start dialogue.
             auto &timerRef = appState.getTimer();
-            int preset = appState.getTimer().getCurrentPresetIndex();
-            String msg = "Double click to start\n\nP-" + String(preset + 1) + ": " +
-                         String(appState.getTimer().getCurrentPresetDuration() / 60) + " min.";
+            int preset = timerRef.getCurrentPresetIndex();
+            String msg = "Double click to start\nP-" + String(preset + 1) + ": " +
+                         String(timerRef.getCurrentPresetDuration() / 60) + " min.";
             appState.setDialogueMessage(msg, DialogueType::TIMER_START);
             appState.setMode(AppMode::DIALOGUE);
             display.writeAlignedText(msg, DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -96,6 +103,7 @@ void ButtonState::handleEvent(ButtonEvent event)
             }
             else if (event == BUTTON_EVENT_SINGLE_CLICK)
             {
+                // Cycle to animation mode.
                 Serial.println("Cycling to animation mode");
                 appState.setMode(AppMode::ANIMATION);
             }
@@ -150,8 +158,8 @@ void ButtonState::handleEvent(ButtonEvent event)
         DialogueType type = appState.getDialogueType();
         if (type == DialogueType::TIMER_START)
         {
-            // In TIMER_START dialogue, double-click starts timer,
-            // long press cycles the preset, and single click goes to animation.
+            // In TIMER_START dialogue: double click starts timer,
+            // long press cycles the preset, single click goes to animation.
             if (event == BUTTON_EVENT_DOUBLE_CLICK)
             {
                 Serial.println("Timer dialogue (start): double click -> start timer");
@@ -162,7 +170,7 @@ void ButtonState::handleEvent(ButtonEvent event)
             {
                 Serial.println("Timer dialogue (start): long press -> cycle timer preset");
                 int preset = appState.getTimer().cyclePreset();
-                String msg = "Double click to start\n\nP-" + String(preset + 1) + ": " +
+                String msg = "Double click to start\nP-" + String(preset + 1) + ": " +
                              String(appState.getTimer().getCurrentPresetDuration() / 60) + " min.";
                 appState.setDialogueMessage(msg, DialogueType::TIMER_START);
                 display.writeAlignedText(msg, DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -213,18 +221,17 @@ void ButtonState::setState(AppState newState)
     {
     case STATE_IDLE:
         led.setLEDState(LEDState::IDLE);
-        display.writeAlignedText("Idle State", DISPLAY_WIDTH, DISPLAY_HEIGHT);
         break;
     case STATE_CYCLE_MODE:
         led.setLEDState(LEDState::IDLE);
-        display.writeAlignedText("Dialogue Mode", DISPLAY_WIDTH, DISPLAY_HEIGHT);
-        delay(2000);
         break;
     case STATE_RESET:
         led.setLEDState(LEDState::IDLE);
-        display.writeAlignedText("Click to go back\nDouble click to reset", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        // Force global mode to DIALOGUE so the reset message is shown.
         appState.setDialogueMessage("Click to go back\nDouble click to reset", DialogueType::RESET);
-        delay(1000); // Delay to help avoid spurious events.
+        appState.setMode(AppMode::DIALOGUE);
+        display.writeAlignedText("Click to go back\nDouble click to reset", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        resetModeEnteredTime = millis();
         break;
     default:
         break;
