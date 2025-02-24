@@ -36,16 +36,20 @@ void setup()
     delay(1000);
     ConfigManager::load();
     display.begin();
+    led.begin();
+    led.setLEDState(LEDState::SPIN_RAINBOW);
 
     animationsController = new AnimationsController(display.getHardware());
-
     animationsController->startBitmapAnimation((const byte *)logo2, 21, false, false, 0, 128, 64);
     while (animationsController->isBitmapAnimationRunning())
     {
         animationsController->update();
+        led.update();
     }
+    
+    led.setLEDState(LEDState::OFF);
+    led.update();
 
-    led.begin();
     voc.begin();
     button.begin();
 
@@ -92,8 +96,6 @@ void loop()
         display.drawTimer(appState.getTimer());
         break;
     case AppMode::ANIMATION:
-        if (led.getLEDState() != LEDState::SOLID_BLUE)
-            led.setLEDState(LEDState::SOLID_BLUE);
         animationsController->update();
         break;
     case AppMode::DIALOGUE:

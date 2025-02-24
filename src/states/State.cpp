@@ -14,7 +14,6 @@ void State::setMode(AppMode m)
 
 void State::cycleMode()
 {
-    // Example cycle: CLOCK -> TIMER -> ANIMATION -> CLOCK
     if (mode == AppMode::CLOCK)
         mode = AppMode::TIMER;
     else if (mode == AppMode::TIMER)

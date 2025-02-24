@@ -227,8 +227,6 @@ void Display::drawTimer(const TimerState &timer)
 {
     display_.clearDisplay();
     unsigned long remainingMs = timer.getRemainingMs();
-    if (!timer.isRunning())
-        remainingMs = (unsigned long)timer.getCurrentPresetDuration() * 1000UL;
     unsigned long totalSec = remainingMs / 1000UL;
     unsigned int minutes = totalSec / 60;
     unsigned int seconds = totalSec % 60;
@@ -247,10 +245,6 @@ void Display::drawTimer(const TimerState &timer)
     display_.setTextSize(1);
     display_.setCursor((DISPLAY_WIDTH - 3 * 6) / 2, line2Y);
     display_.print(presetBuf);
-    if (!timer.isRunning())
-        writeAlignedText("Double tap to start", 128, 64, 0, 64 - 10, 1, false, true, false, VALIGN_BOTTOM, HALIGN_CENTER);
-    else if (timer.isPaused())
-        writeAlignedText("Tap to resume\nDouble tap to stop", 128, 64, 0, 64 - 20, 1, false, true, false, VALIGN_BOTTOM, HALIGN_CENTER);
     display_.display();
 }
 
