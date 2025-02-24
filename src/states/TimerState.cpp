@@ -19,9 +19,10 @@ void TimerState::setPresets(const int *presets, int count)
     }
 }
 
-void TimerState::cyclePreset()
+int TimerState::cyclePreset()
 {
     currentPresetIdx = (currentPresetIdx + 1) % presetCount;
+    return currentPresetIdx;
 }
 
 void TimerState::start()
@@ -58,7 +59,7 @@ void TimerState::stop()
     paused = false;
     endTime = 0;
     pausedRemaining = 0;
-    // optionally reset preset index or keep it
+    currentPresetIdx = 0;
 }
 
 bool TimerState::isRunning() const { return running; }

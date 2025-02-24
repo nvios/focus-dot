@@ -23,146 +23,209 @@ ButtonState::ButtonState(LED &led,
 
 void ButtonState::handleEvent(ButtonEvent event)
 {
-    // Part A: Local Button FSM transitions
+    // --- Part A: Local Button FSM transitions ---
     switch (currentState)
     {
     case STATE_IDLE:
-        if (event == BUTTON_EVENT_LONG_PRESS) {
-            Serial.println("Long Press: Entering Config Mode");
-            setState(STATE_CYCLE_MODE);
+        if (event == BUTTON_EVENT_RESET_HOLD)
+        {
+            Serial.println("Reset Hold: Entering Reset Mode");
+            setState(STATE_RESET);
         }
-        else if (event == BUTTON_EVENT_RESET_HOLD) {
-            Serial.println("Reset Hold: Performing Factory Reset");
-            setState(STATE_RESETTING);
-        }
-        // ... we do not necessarily single-click cycle the local state machine
         break;
-
     case STATE_CYCLE_MODE:
-        if (event == BUTTON_EVENT_RESET_HOLD) {
+        if (event == BUTTON_EVENT_RESET_HOLD)
+        {
             Serial.println("Reset from Config Mode...");
-            setState(STATE_RESETTING);
+            setState(STATE_RESET);
         }
         break;
-
-    case STATE_RESETTING:
-        Serial.println("Performing Factory Reset...");
-        ESP.restart();
+    case STATE_RESET:
+        if (event == BUTTON_EVENT_SINGLE_CLICK)
+        {
+            Serial.println("Exiting Reset Mode");
+            appState.setMode(AppMode::CLOCK);
+            display.writeAlignedText("Clock Mode", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+            setState(STATE_IDLE);
+        }
+        else if (event == BUTTON_EVENT_DOUBLE_CLICK)
+        {
+            Serial.println("Performing Factory Reset");
+            ESP.restart();
+        }
         break;
-
     default:
         setState(STATE_IDLE);
         break;
     }
 
-    // Part B: Global "mode" logic
+    // --- Part B: Global "mode" logic ---
     switch (appState.getMode())
     {
     case AppMode::CLOCK:
-        if (event == BUTTON_EVENT_SINGLE_CLICK) {
-            // cycle to TIMER or ANIMATION
-            appState.cycleMode();
-            Serial.println("Mode changed (clock -> next).");
+        if (event == BUTTON_EVENT_SINGLE_CLICK)
+        {
+            // Switch to timer start dialogue.
+            auto &timerRef = appState.getTimer();
+            int preset = appState.getTimer().getCurrentPresetIndex();
+            String msg = "Double click to start\n\nP-" + String(preset + 1) + ": " +
+                         String(appState.getTimer().getCurrentPresetDuration() / 60) + " min.";
+            appState.setDialogueMessage(msg, DialogueType::TIMER_START);
+            appState.setMode(AppMode::DIALOGUE);
+            display.writeAlignedText(msg, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+            Serial.println("Mode changed (clock -> dialogue for timer start).");
         }
-        else if (event == BUTTON_EVENT_DOUBLE_CLICK) {
-            // e.g. refresh wifi
+        else if (event == BUTTON_EVENT_DOUBLE_CLICK)
+        {
             Serial.println("Double Click: Refreshing Wi-Fi");
             wifiController.begin(WIFI_SSID, WIFI_PASS);
         }
-        // long press might do nothing special
         break;
 
     case AppMode::TIMER:
     {
         auto &timerRef = appState.getTimer();
-        if (!timerRef.isRunning()) {
-            if (event == BUTTON_EVENT_DOUBLE_CLICK) {
+        if (!timerRef.isRunning() && !timerRef.isPaused())
+        {
+            // Timer not started.
+            if (event == BUTTON_EVENT_DOUBLE_CLICK)
+            {
                 Serial.println("Starting timer");
                 timerRef.start();
+                appState.setMode(AppMode::TIMER);
             }
-            else if (event == BUTTON_EVENT_LONG_PRESS) {
-                Serial.println("Cycling Timer Preset");
-                timerRef.cyclePreset();
+            else if (event == BUTTON_EVENT_SINGLE_CLICK)
+            {
+                Serial.println("Cycling to animation mode");
+                appState.setMode(AppMode::ANIMATION);
             }
-        } else {
-            // Timer is running or paused
-            if (event == BUTTON_EVENT_SINGLE_CLICK) {
-                if (timerRef.isPaused()) {
-                    Serial.println("Resume timer");
-                    timerRef.resume();
-                } else {
-                    Serial.println("Pause timer");
-                    timerRef.pause();
-                }
+        }
+        else if (timerRef.isRunning())
+        {
+            if (event == BUTTON_EVENT_SINGLE_CLICK)
+            {
+                Serial.println("Pausing timer");
+                timerRef.pause();
+                appState.setDialogueMessage("Click to resume\nDouble click to stop", DialogueType::TIMER_PAUSED);
+                appState.setMode(AppMode::DIALOGUE);
+                display.writeAlignedText(appState.getDialogueMessage(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
             }
-            else if (event == BUTTON_EVENT_DOUBLE_CLICK) {
-                if (timerRef.isPaused()) {
-                    Serial.println("Stop timer, return to clock");
-                    timerRef.stop();
-                    appState.setMode(AppMode::CLOCK);
-                }
+        }
+        else if (timerRef.isPaused())
+        {
+            if (event == BUTTON_EVENT_SINGLE_CLICK)
+            {
+                Serial.println("Resuming timer");
+                timerRef.resume();
+                appState.setMode(AppMode::TIMER);
+            }
+            else if (event == BUTTON_EVENT_DOUBLE_CLICK)
+            {
+                Serial.println("Stopping timer, returning to clock");
+                timerRef.stop();
+                appState.setMode(AppMode::CLOCK);
             }
         }
         break;
     }
 
     case AppMode::ANIMATION:
-        if (event == BUTTON_EVENT_SINGLE_CLICK) {
-            // Possibly cycle mode
+        if (event == BUTTON_EVENT_SINGLE_CLICK)
+        {
             appState.cycleMode();
-            Serial.println("Mode changed (animation -> next).");
+            Serial.println("Mode changed (animation -> clock).");
         }
-        // Double click does nothing in ANIMATION
-        // Long press does nothing
         break;
 
     case AppMode::NOTIFICATION:
-        // Could ignore all button events, or let user dismiss the notification
-        if (event == BUTTON_EVENT_SINGLE_CLICK) {
+        if (event == BUTTON_EVENT_SINGLE_CLICK)
+        {
             Serial.println("Dismiss notification, returning to CLOCK");
             appState.setMode(AppMode::CLOCK);
         }
-        // double/long press might do nothing
         break;
 
     case AppMode::DIALOGUE:
-        // Suppose single-click means "yes," double-click means "no," long press ignored
-        if (event == BUTTON_EVENT_SINGLE_CLICK) {
-            Serial.println("User answered YES in dialogue. Exiting dialogue...");
-            appState.setMode(AppMode::CLOCK);
+    {
+        DialogueType type = appState.getDialogueType();
+        if (type == DialogueType::TIMER_START)
+        {
+            // In TIMER_START dialogue, double-click starts timer,
+            // long press cycles the preset, and single click goes to animation.
+            if (event == BUTTON_EVENT_DOUBLE_CLICK)
+            {
+                Serial.println("Timer dialogue (start): double click -> start timer");
+                appState.getTimer().start();
+                appState.setMode(AppMode::TIMER);
+            }
+            else if (event == BUTTON_EVENT_LONG_PRESS)
+            {
+                Serial.println("Timer dialogue (start): long press -> cycle timer preset");
+                int preset = appState.getTimer().cyclePreset();
+                String msg = "Double click to start\n\nP-" + String(preset + 1) + ": " +
+                             String(appState.getTimer().getCurrentPresetDuration() / 60) + " min.";
+                appState.setDialogueMessage(msg, DialogueType::TIMER_START);
+                display.writeAlignedText(msg, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+            }
+            else if (event == BUTTON_EVENT_SINGLE_CLICK)
+            {
+                Serial.println("Timer dialogue (start): single click -> go to animation mode");
+                appState.setMode(AppMode::ANIMATION);
+            }
         }
-        else if (event == BUTTON_EVENT_DOUBLE_CLICK) {
-            Serial.println("User answered NO in dialogue. Exiting dialogue...");
-            appState.setMode(AppMode::CLOCK);
+        else if (type == DialogueType::TIMER_PAUSED)
+        {
+            if (event == BUTTON_EVENT_SINGLE_CLICK)
+            {
+                Serial.println("Timer dialogue (paused): single click -> resume timer");
+                appState.getTimer().resume();
+                appState.setMode(AppMode::TIMER);
+            }
+            else if (event == BUTTON_EVENT_DOUBLE_CLICK)
+            {
+                Serial.println("Timer dialogue (paused): double click -> stop timer");
+                appState.getTimer().stop();
+                appState.setMode(AppMode::CLOCK);
+            }
         }
-        // no-op on long press
+        else if (type == DialogueType::RESET)
+        {
+            if (event == BUTTON_EVENT_SINGLE_CLICK)
+            {
+                Serial.println("Reset dialogue: single click -> cancel reset");
+                appState.setMode(AppMode::CLOCK);
+            }
+            else if (event == BUTTON_EVENT_DOUBLE_CLICK)
+            {
+                Serial.println("Reset dialogue: double click -> performing factory reset");
+                ESP.restart();
+            }
+        }
         break;
+    }
     }
 }
 
-// Local button FSM function
 void ButtonState::setState(AppState newState)
 {
     currentState = newState;
-
     switch (currentState)
     {
     case STATE_IDLE:
         led.setLEDState(LEDState::IDLE);
-        display.writeAlignedText("Idle State");
+        display.writeAlignedText("Idle State", DISPLAY_WIDTH, DISPLAY_HEIGHT);
         break;
-
     case STATE_CYCLE_MODE:
         led.setLEDState(LEDState::IDLE);
-        display.writeAlignedText("Configuration Mode");
+        display.writeAlignedText("Dialogue Mode", DISPLAY_WIDTH, DISPLAY_HEIGHT);
         delay(2000);
         break;
-
-    case STATE_RESETTING:
+    case STATE_RESET:
         led.setLEDState(LEDState::IDLE);
-        display.writeAlignedText("Resetting...");
+        display.writeAlignedText("Click to go back\nDouble click to reset", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        appState.setDialogueMessage("Click to go back\nDouble click to reset", DialogueType::RESET);
+        delay(1000); // Delay to help avoid spurious events.
         break;
-
     default:
         break;
     }

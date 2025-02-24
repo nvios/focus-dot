@@ -53,17 +53,17 @@ void setup()
     if (!wifiController.begin(WIFI_SSID, WIFI_PASS))
     {
         Serial.println("Wi-Fi connection failed...");
-        display.writeAlignedText("Connection timeout. Restarting...");
+        display.writeAlignedText("Connection timeout. Restarting...", DISPLAY_WIDTH, DISPLAY_HEIGHT);
         delay(2000);
         ESP.restart();
     }
     mqttController.begin(1);
-    display.writeAlignedText("Checking the time...");
+    display.writeAlignedText("Checking the time...", DISPLAY_WIDTH, DISPLAY_HEIGHT);
     setupTime(NTP_SERVER);
     if (!syncTime(10000))
     {
         Serial.println("Time sync failed, continuing anyway.");
-        display.writeAlignedText("Time sync failed :(");
+        display.writeAlignedText("Time sync failed :(", DISPLAY_WIDTH, DISPLAY_HEIGHT);
     }
 }
 
@@ -83,24 +83,23 @@ void loop()
     }
     mqttController.update(now);
 
-    if (appState.getMode() == AppMode::TIMER)
+    // Update display based on current app mode.
+    switch (appState.getMode())
     {
+    case AppMode::CLOCK:
+        clockState.update();
+        break;
+    case AppMode::TIMER:
         appState.getTimer().update();
         display.drawTimer(appState.getTimer());
-    }
-    else if (appState.getMode() == AppMode::CLOCK)
-    {
-        clockState.update();
-    }
-    else if (appState.getMode() == AppMode::ANIMATION)
-    {
+        break;
+    case AppMode::ANIMATION:
         if (led.getLEDState() != LEDState::SOLID_BLUE)
             led.setLEDState(LEDState::SOLID_BLUE);
-        animationsController->startEyesAnimation();
         animationsController->update();
-    }
-    else if (appState.getMode() == AppMode::DIALOGUE)
-    {
-        display.writeAlignedText("Dialogue mode!");
-    }
+        break;
+    case AppMode::DIALOGUE:
+        // Display the dialogue message (set by ButtonState) continuously.
+        display.writeAlignedText(appState.getDialogueMessage(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        break;}
 }

@@ -5,7 +5,7 @@ enum AppState
 {
     STATE_IDLE,
     STATE_CYCLE_MODE,
-    STATE_RESETTING
+    STATE_RESET
 };
 
 enum ButtonEvent
@@ -36,6 +36,7 @@ public:
 
 private:
     void setState(AppState newState);
+    int presetNumber;
     AppState currentState;
     LED &led;
     Display &display;
