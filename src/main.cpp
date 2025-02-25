@@ -29,15 +29,17 @@ Button button(BUTTON_PIN, true, buttonState);
 // Timing variables
 static unsigned long lastLedUpdate = 0;
 static unsigned long lastMqttCheck = 0;
+static unsigned long lastMqttUpdate = 0;
 
 // Timer expiration animation control
 bool timerExpirationAnimationActive = false;
 unsigned long timerExpirationAnimationStart = 0;
 
-void onTimerComplete() {
+void onTimerComplete()
+{
     appState.setMode(AppMode::ANIMATION);
     led.setLEDState(LEDState::SPIN_RAINBOW);
-    animationsController->startBitmapAnimation((const byte *)astro, 13, true, false, 5000, 64, 64);
+    animationsController->startBitmapAnimation((const byte *)flag, 30, true, false, 5000, 64, 64);
     timerExpirationAnimationActive = true;
     timerExpirationAnimationStart = millis();
 }
@@ -59,8 +61,8 @@ void setup()
         led.update();
     }
 
-    led.setLEDState(LEDState::OFF);
-    led.update();
+    //led.setLEDState(LEDState::OFF);
+    //led.update();
 
     voc.begin();
     button.begin();
@@ -97,7 +99,11 @@ void loop()
         lastMqttCheck = now;
         mqttController.checkConnection(3);
     }
-    mqttController.update(now);
+    if (now - lastMqttUpdate >= 2000)
+    {
+        lastMqttUpdate = now;
+        mqttController.update(now);
+    }
 
     switch (appState.getMode())
     {

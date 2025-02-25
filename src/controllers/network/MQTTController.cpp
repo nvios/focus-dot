@@ -38,13 +38,16 @@ void MQTTController::update(unsigned long now)
     if (sub == &eventFeed)
     {
         parseEventJSON((char *)eventFeed.lastread);
+        if (message, eventStart, eventEnd, eventTitle == ""){
+            return;
+        }
         led.setLEDState(LEDState::SPIN_RAINBOW);
         eventDisplayStart = now;
         eventDisplayed = true;
-        if (message == "")
+        if (message == ""){
             display.drawEvent(eventTitle, eventStart, eventEnd, 1);
-        else
-            display.writeAlignedText(message.c_str());
+        }
+        else {display.writeAlignedText(message.c_str());}
         appState.setMode(AppMode::NOTIFICATION);
     }
 

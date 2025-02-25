@@ -42,10 +42,6 @@ void ButtonState::handleEvent(ButtonEvent event)
             led.setLEDState(LEDState::PULSE_BLUE);
             display.drawTimerDialogue(appState.getTimer());
         }
-        else if (event == BUTTON_EVENT_DOUBLE_CLICK)
-        {
-            wifiController.begin(WIFI_SSID, WIFI_PASS);
-        }
         break;
     }
 
