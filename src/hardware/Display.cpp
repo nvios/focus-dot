@@ -78,9 +78,12 @@ int Display::calculateTotalHeight(const std::vector<String> &lines, int textSize
     const int blankLineHeight = DEFAULT_BLANK_LINE_SIZE;
     for (auto &ln : lines)
     {
-        if (ln.length() == 0) {
+        if (ln.length() == 0)
+        {
             total += blankLineHeight;
-        } else {
+        }
+        else
+        {
             int16_t x1, y1;
             uint16_t w, h;
             display_.setTextSize(textSize);
@@ -91,17 +94,18 @@ int Display::calculateTotalHeight(const std::vector<String> &lines, int textSize
     return total;
 }
 
-
 void Display::ellipsizeLinesToFit(std::vector<String> &lines, int maxHeight, int textSize)
 {
     int th = calculateTotalHeight(lines, textSize);
     if (th <= maxHeight)
         return;
-    while (lines.size() > 1 && th > maxHeight)
+
+    if (!lines.empty() && lines.back().length() == 0 && lines.size() > 1)
     {
         lines.pop_back();
         th = calculateTotalHeight(lines, textSize);
     }
+
     if (lines.size() == 1 && th > maxHeight)
     {
         while (!lines[0].isEmpty())
@@ -162,15 +166,17 @@ int Display::writeAlignedText(const String &text, int maxWidth, int maxHeight, i
     const int blankLineHeight = DEFAULT_BLANK_LINE_SIZE;
     for (auto &ln : lines)
     {
-        if (ln.length() == 0) {
+        if (ln.length() == 0)
+        {
             currentY += blankLineHeight;
-        } else {
+        }
+        else
+        {
             int16_t x1, y1;
             uint16_t w, h;
             display_.setTextSize(textSize);
             display_.getTextBounds(ln.c_str(), 0, 0, &x1, &y1, &w, &h);
-            int xOffset = (hAlign == HALIGN_LEFT) ? startX :
-                          (hAlign == HALIGN_CENTER ? startX + (maxWidth - w) / 2 : startX + (maxWidth - w));
+            int xOffset = (hAlign == HALIGN_LEFT) ? startX : (hAlign == HALIGN_CENTER ? startX + (maxWidth - w) / 2 : startX + (maxWidth - w));
             display_.setCursor(xOffset, currentY - y1);
             display_.println(ln);
             currentY += (h + textSize);
@@ -241,6 +247,23 @@ void Display::drawEvent(const String &title, const String &startTime, const Stri
     writeAlignedText(buffer.c_str(), 128, 64, 0, finalY + 10, 2, true, false, true, VALIGN_TOP, HALIGN_CENTER);
 }
 
+void Display::drawTimerDialogue(const TimerState &timer)
+{
+    display_.clearDisplay();
+    unsigned int presetDuration = timer.getCurrentPresetDuration();
+    unsigned int minutes = presetDuration / 60;
+    unsigned int seconds = presetDuration % 60;
+
+    char timeBuf[8];
+    snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d", minutes, seconds);
+    char presetBuf[6];
+    snprintf(presetBuf, sizeof(presetBuf), "P-%02d", timer.getCurrentPresetIndex() + 1);
+
+    writeAlignedText("Double click to start", 128, 64, 0, 0, 2, false, true, false, VALIGN_TOP, HALIGN_CENTER);
+    writeAlignedText(timeBuf, 128, 64, 0, 12, 4, false, false, false, VALIGN_CENTER, HALIGN_CENTER);
+    writeAlignedText(presetBuf, 128, 64, 0, 0, 1, false, false, true, VALIGN_BOTTOM, HALIGN_CENTER);
+}
+
 void Display::drawTimer(const TimerState &timer)
 {
     display_.clearDisplay();
@@ -248,7 +271,7 @@ void Display::drawTimer(const TimerState &timer)
     unsigned long totalSec = remainingMs / 1000UL;
     unsigned int minutes = totalSec / 60;
     unsigned int seconds = totalSec % 60;
-    char timeBuf[6];
+    char timeBuf[8];
     snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d", minutes, seconds);
     display_.setTextSize(5);
     int16_t x1, y1;

@@ -3,11 +3,12 @@
 TimerState::TimerState()
     : presetCount(3), currentPresetIdx(0),
       running(false), paused(false),
-      endTime(0), pausedRemaining(0)
+      endTime(0), pausedRemaining(0),
+      onComplete(nullptr) // initialize observer to null
 {
-    presetDurations[0] = 60;  // 1 minute
-    presetDurations[1] = 300; // 5 minutes
-    presetDurations[2] = 600; // 10 minutes
+    presetDurations[0] = 5;     // 5  seconds
+    presetDurations[1] = 300;   // 5 minutes
+    presetDurations[2] = 14400; // 240 minutes
 }
 
 void TimerState::setPresets(const int *presets, int count)
@@ -90,9 +91,18 @@ void TimerState::update()
     {
         if (nowMs() >= endTime)
         {
+            if (onComplete)
+            {
+                onComplete();
+            }
             stop();
         }
     }
 }
 
 unsigned long TimerState::nowMs() const { return millis(); }
+
+void TimerState::setOnComplete(void (*callback)(void))
+{
+    onComplete = callback;
+}

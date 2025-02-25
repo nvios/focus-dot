@@ -1,7 +1,7 @@
 #include "states/LEDState.h"
 
 LEDStateManager::LEDStateManager()
-    : _currentLEDState(LEDState::IDLE), customR(0), customG(24), customB(0) {}
+    : _currentLEDState(LEDState::IDLE), customR(0), customG(0), customB(0) {}
 
 void LEDStateManager::setState(LEDState newState)
 {

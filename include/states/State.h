@@ -14,9 +14,9 @@ enum class AppMode {
 
 enum class DialogueType {
     NONE,
-    TIMER_START,    // "Double click to start\nP-01: ... min."
-    TIMER_PAUSED,   // "Click to resume\nDouble click to stop"
-    RESET           // "Click to go back\nDouble click to reset"
+    TIMER_START,
+    TIMER_PAUSED,
+    RESET
 };
 
 class State {

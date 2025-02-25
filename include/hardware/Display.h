@@ -12,18 +12,21 @@
 #include <states/TimerState.h>
 #include <vector>
 
-enum VAlign {
+enum VAlign
+{
   VALIGN_TOP,
   VALIGN_CENTER,
   VALIGN_BOTTOM
 };
-enum HAlign {
+enum HAlign
+{
   HALIGN_LEFT,
   HALIGN_CENTER,
   HALIGN_RIGHT
 };
 
-class Display {
+class Display
+{
 public:
   Display();
   bool begin();
@@ -40,11 +43,11 @@ public:
                        HAlign hAlign = HALIGN_CENTER);
 
   void drawClock(int hour, int min, const char *wDay, int mDay, int voc);
+  void drawTimerDialogue(const TimerState& timer);
   void drawTimer(const TimerState &timer);
   void drawEvent(const String &title, const String &startTime, const String &endTime, int hoursToAdd);
 
-  // Expose the underlying hardware display for AnimationsController.
-  Adafruit_SH1106G& getHardware();
+  Adafruit_SH1106G &getHardware();
 
 private:
   Adafruit_SH1106G display_;

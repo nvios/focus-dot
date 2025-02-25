@@ -37,14 +37,10 @@ void ButtonState::handleEvent(ButtonEvent event)
     {
         if (event == BUTTON_EVENT_SINGLE_CLICK)
         {
-            auto &timerRef = appState.getTimer();
-            int preset = timerRef.getCurrentPresetIndex();
-            String msg = "Double click to start timer\n\nP-0" + String(preset + 1) + ": " +
-                         String(timerRef.getCurrentPresetDuration() / 60) + " min.";
-            appState.setDialogueMessage(msg, DialogueType::TIMER_START);
+            appState.setDialogueMessage("", DialogueType::TIMER_START);
             appState.setMode(AppMode::DIALOGUE);
             led.setLEDState(LEDState::PULSE_BLUE);
-            display.writeAlignedText(msg, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+            display.drawTimerDialogue(appState.getTimer());
         }
         else if (event == BUTTON_EVENT_DOUBLE_CLICK)
         {
@@ -122,11 +118,9 @@ void ButtonState::handleEvent(ButtonEvent event)
             }
             else if (event == BUTTON_EVENT_LONG_PRESS)
             {
-                int preset = appState.getTimer().cyclePreset();
-                String msg = "Double click to start timer\n\nP-0" + String(preset + 1) + ": " +
-                             String(appState.getTimer().getCurrentPresetDuration() / 60) + " min.";
-                appState.setDialogueMessage(msg, DialogueType::TIMER_START);
-                display.writeAlignedText(msg, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+                appState.getTimer().cyclePreset();
+                appState.setDialogueMessage("", DialogueType::TIMER_START);
+                display.drawTimerDialogue(appState.getTimer());
             }
             else if (event == BUTTON_EVENT_SINGLE_CLICK)
             {
@@ -135,7 +129,6 @@ void ButtonState::handleEvent(ButtonEvent event)
             }
             else
             {
-                // Maintain PULSE_BLUE if no recognized event.
                 led.setLEDState(LEDState::PULSE_BLUE);
             }
         }

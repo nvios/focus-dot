@@ -30,6 +30,18 @@ Button button(BUTTON_PIN, true, buttonState);
 static unsigned long lastLedUpdate = 0;
 static unsigned long lastMqttCheck = 0;
 
+// Timer expiration animation control
+bool timerExpirationAnimationActive = false;
+unsigned long timerExpirationAnimationStart = 0;
+
+void onTimerComplete() {
+    appState.setMode(AppMode::ANIMATION);
+    led.setLEDState(LEDState::SPIN_RAINBOW);
+    animationsController->startBitmapAnimation((const byte *)astro, 13, true, false, 5000, 64, 64);
+    timerExpirationAnimationActive = true;
+    timerExpirationAnimationStart = millis();
+}
+
 void setup()
 {
     Serial.begin(115200);
@@ -68,6 +80,7 @@ void setup()
         Serial.println("Time sync failed, continuing anyway.");
         display.writeAlignedText("Time sync failed :(", DISPLAY_WIDTH, DISPLAY_HEIGHT);
     }
+    appState.getTimer().setOnComplete(onTimerComplete);
 }
 
 void loop()
@@ -104,9 +117,14 @@ void loop()
     }
     case AppMode::ANIMATION:
         animationsController->update();
+        if (timerExpirationAnimationActive && (now - timerExpirationAnimationStart >= 5000))
+        {
+            timerExpirationAnimationActive = false;
+            appState.setMode(AppMode::CLOCK);
+            led.setLEDState(LEDState::IDLE);
+        }
         break;
     case AppMode::DIALOGUE:
-        //display.writeAlignedText(appState.getDialogueMessage(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
         break;
     }
 }

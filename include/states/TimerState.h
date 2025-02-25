@@ -20,6 +20,9 @@ public:
     int getCurrentPresetDuration() const;
     void update();
 
+    // Observer for timer complete
+    void setOnComplete(void (*callback)(void));
+
 private:
     int presetCount;
     int currentPresetIdx;
@@ -29,6 +32,7 @@ private:
     unsigned long pausedRemaining;
     int presetDurations[3];
     unsigned long nowMs() const;
+    void (*onComplete)(void);
 };
 
 #endif

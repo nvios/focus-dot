@@ -11,19 +11,15 @@ public:
   AnimationsController(Adafruit_SH1106G &disp);
   
   void update();
-  
-  // Start a bitmap (logo) animation. This sets the mode to BITMAP.
+
   void startBitmapAnimation(const byte* frames, int frameCount, bool loop, bool reverse, unsigned long durationMs, int width, int height);
   bool isBitmapAnimationRunning();
-
-  // Switch to eyes animation mode (resets eyes state).
   void startEyesAnimation();
 
 private:
   Adafruit_SH1106G &display;
-  AnimationMode mode; // current animation mode
+  AnimationMode mode;
 
-  // ----- Eyes Animation Variables -----
   enum BlinkState { OPEN, CLOSING, CLOSED, OPENING };
   BlinkState blinkState;
   unsigned long blinkStartTime;
@@ -51,7 +47,7 @@ private:
   static const int numCenters = 5;
   float centers[numCenters][2];
 
-  // ----- Bitmap Animation Variables -----
+  // Bitmap animation state
   const byte* animationFrames;
   int totalFrames;
   bool loopAnimation;
@@ -68,7 +64,6 @@ private:
   int frameY;
   int frameSize;
 
-  // Private helper methods
   void updateEyesAnimation();
   void updateBitmapAnimation();
 };
