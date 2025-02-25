@@ -60,6 +60,12 @@ void Display::splitTextIntoLines(const String &text, int maxWidth, int textSize,
         {
             lines.push_back(currentLine);
             currentLine = "";
+
+            if (i < text.length() && text.charAt(i) == '\n')
+            {
+                lines.push_back("");
+                i++;
+            }
         }
     }
     if (!currentLine.isEmpty())
@@ -69,16 +75,22 @@ void Display::splitTextIntoLines(const String &text, int maxWidth, int textSize,
 int Display::calculateTotalHeight(const std::vector<String> &lines, int textSize)
 {
     int total = 0;
+    const int blankLineHeight = DEFAULT_BLANK_LINE_SIZE;
     for (auto &ln : lines)
     {
-        int16_t x1, y1;
-        uint16_t w, h;
-        display_.setTextSize(textSize);
-        display_.getTextBounds(ln.c_str(), 0, 0, &x1, &y1, &w, &h);
-        total += h;
+        if (ln.length() == 0) {
+            total += blankLineHeight;
+        } else {
+            int16_t x1, y1;
+            uint16_t w, h;
+            display_.setTextSize(textSize);
+            display_.getTextBounds(ln.c_str(), 0, 0, &x1, &y1, &w, &h);
+            total += (h + textSize);
+        }
     }
     return total;
 }
+
 
 void Display::ellipsizeLinesToFit(std::vector<String> &lines, int maxHeight, int textSize)
 {
@@ -147,16 +159,22 @@ int Display::writeAlignedText(const String &text, int maxWidth, int maxHeight, i
     int totalH = calculateTotalHeight(lines, textSize);
     int yOffset = (vAlign == VALIGN_TOP) ? startY : (vAlign == VALIGN_CENTER ? startY + (maxHeight - totalH) / 2 : startY + (maxHeight - totalH));
     int currentY = yOffset;
+    const int blankLineHeight = DEFAULT_BLANK_LINE_SIZE;
     for (auto &ln : lines)
     {
-        int16_t x1, y1;
-        uint16_t w, h;
-        display_.setTextSize(textSize);
-        display_.getTextBounds(ln.c_str(), 0, 0, &x1, &y1, &w, &h);
-        int xOffset = (hAlign == HALIGN_LEFT) ? startX : (hAlign == HALIGN_CENTER ? startX + (maxWidth - w) / 2 : startX + (maxWidth - w));
-        display_.setCursor(xOffset, currentY - y1);
-        display_.println(ln);
-        currentY += (h + textSize);
+        if (ln.length() == 0) {
+            currentY += blankLineHeight;
+        } else {
+            int16_t x1, y1;
+            uint16_t w, h;
+            display_.setTextSize(textSize);
+            display_.getTextBounds(ln.c_str(), 0, 0, &x1, &y1, &w, &h);
+            int xOffset = (hAlign == HALIGN_LEFT) ? startX :
+                          (hAlign == HALIGN_CENTER ? startX + (maxWidth - w) / 2 : startX + (maxWidth - w));
+            display_.setCursor(xOffset, currentY - y1);
+            display_.println(ln);
+            currentY += (h + textSize);
+        }
     }
     if (displayText)
         display_.display();

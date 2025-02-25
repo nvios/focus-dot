@@ -4,6 +4,7 @@
 #define DEFAULT_FRAME_WIDTH 128
 #define DEFAULT_FRAME_HEIGHT 64
 #define DEFAULT_FRAME_DELAY 64
+#define DEFAULT_BLANK_LINE_SIZE 16
 
 #include <Arduino.h>
 #include <Adafruit_SH110X.h>

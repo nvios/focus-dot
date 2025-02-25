@@ -13,14 +13,10 @@ bool WiFiController::begin(const char *ssid, const char *password)
     {
         if (millis() - start > 20000)
         {
-            display.writeAlignedText("Wi-Fi connection failed!");
             return false;
         }
-        delay(500);
-        Serial.print(".");
     }
 
     Serial.print("Wi-Fi Connected!");
-    display.writeAlignedText("Wi-Fi Connected!");
     return true;
 }

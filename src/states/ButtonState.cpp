@@ -24,9 +24,9 @@ void ButtonState::handleEvent(ButtonEvent event)
 {
     if (event == BUTTON_EVENT_RESET_HOLD)
     {
-        appState.setDialogueMessage("Click to go back\nDouble click to reset", DialogueType::RESET);
+        appState.setDialogueMessage("Click to go back\n\nDouble click to reset", DialogueType::RESET);
         appState.setMode(AppMode::DIALOGUE);
-        display.writeAlignedText("Click to go back\nDouble click to reset", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        display.writeAlignedText("Click to go back\n\nDouble click to reset", DISPLAY_WIDTH, DISPLAY_HEIGHT);
         led.setLEDState(LEDState::IDLE);
         return;
     }
@@ -39,7 +39,7 @@ void ButtonState::handleEvent(ButtonEvent event)
         {
             auto &timerRef = appState.getTimer();
             int preset = timerRef.getCurrentPresetIndex();
-            String msg = "Double click to start\nP-0" + String(preset + 1) + ": " +
+            String msg = "Double click to start timer\n\nP-0" + String(preset + 1) + ": " +
                          String(timerRef.getCurrentPresetDuration() / 60) + " min.";
             appState.setDialogueMessage(msg, DialogueType::TIMER_START);
             appState.setMode(AppMode::DIALOGUE);
@@ -75,7 +75,7 @@ void ButtonState::handleEvent(ButtonEvent event)
             if (event == BUTTON_EVENT_SINGLE_CLICK)
             {
                 timerRef.pause();
-                appState.setDialogueMessage("Click to resume\nDouble click to stop", DialogueType::TIMER_PAUSED);
+                appState.setDialogueMessage("Click to resume\n\nDouble click to stop", DialogueType::TIMER_PAUSED);
                 appState.setMode(AppMode::DIALOGUE);
                 display.writeAlignedText(appState.getDialogueMessage(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
                 led.setLEDState(LEDState::PULSE_BLUE);
@@ -123,7 +123,7 @@ void ButtonState::handleEvent(ButtonEvent event)
             else if (event == BUTTON_EVENT_LONG_PRESS)
             {
                 int preset = appState.getTimer().cyclePreset();
-                String msg = "Double click to start\nP-0" + String(preset + 1) + ": " +
+                String msg = "Double click to start timer\n\nP-0" + String(preset + 1) + ": " +
                              String(appState.getTimer().getCurrentPresetDuration() / 60) + " min.";
                 appState.setDialogueMessage(msg, DialogueType::TIMER_START);
                 display.writeAlignedText(msg, DISPLAY_WIDTH, DISPLAY_HEIGHT);

@@ -168,7 +168,7 @@ void AnimationsController::updateBitmapAnimation()
     if (currentTime - animationStartTime >= animationDuration)
     {
         bitmapAnimationRunning = false;
-        mode = EYES; // Switch back to eyes animation
+        mode = EYES;
         return;
     }
     if (currentTime - lastFrameTime >= frameDelay)
