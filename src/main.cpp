@@ -46,7 +46,7 @@ void setup()
         animationsController->update();
         led.update();
     }
-    
+
     led.setLEDState(LEDState::OFF);
     led.update();
 
@@ -92,14 +92,21 @@ void loop()
         clockState.update();
         break;
     case AppMode::TIMER:
+    {
         appState.getTimer().update();
-        display.drawTimer(appState.getTimer());
+        static unsigned long lastDisplayUpdate = 0;
+        if (now - lastDisplayUpdate >= 1000)
+        {
+            lastDisplayUpdate = now;
+            display.drawTimer(appState.getTimer());
+        }
         break;
+    }
     case AppMode::ANIMATION:
         animationsController->update();
         break;
     case AppMode::DIALOGUE:
-        display.writeAlignedText(appState.getDialogueMessage(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        //display.writeAlignedText(appState.getDialogueMessage(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
         break;
     }
 }

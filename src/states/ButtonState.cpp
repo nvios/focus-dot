@@ -27,7 +27,7 @@ void ButtonState::handleEvent(ButtonEvent event)
         appState.setDialogueMessage("Click to go back\n\nDouble click to reset", DialogueType::RESET);
         appState.setMode(AppMode::DIALOGUE);
         display.writeAlignedText("Click to go back\n\nDouble click to reset", DISPLAY_WIDTH, DISPLAY_HEIGHT);
-        led.setLEDState(LEDState::IDLE);
+        led.setLEDState(LEDState::PULSE_BLUE);
         return;
     }
 
@@ -163,6 +163,8 @@ void ButtonState::handleEvent(ButtonEvent event)
             }
             else if (event == BUTTON_EVENT_DOUBLE_CLICK)
             {
+                display.writeAlignedText("Resetting your device...", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+                delay(2000);
                 ESP.restart();
             }
         }

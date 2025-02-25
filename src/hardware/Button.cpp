@@ -12,7 +12,9 @@ Button::Button(uint8_t pin, bool activeLow, ButtonState &state)
 void Button::begin() {
     oneButton.attachClick(onSingleClick);
     oneButton.attachDoubleClick(onDoubleClick);
+    oneButton.setClickMs(450);
     oneButton.attachLongPressStart(onLongPressStart);
+    oneButton.setPressMs(1000);
     oneButton.attachDuringLongPress(onLongPressDuring);
 }
 
