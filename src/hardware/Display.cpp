@@ -61,7 +61,7 @@ void Display::splitTextIntoLines(const String &text, int maxWidth, int textSize,
             lines.push_back(currentLine);
             currentLine = "";
 
-            if (i < text.length() && text.charAt(i) == '\n')
+            while (i < text.length() && text.charAt(i) == '\n')
             {
                 lines.push_back("");
                 i++;

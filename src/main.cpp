@@ -61,9 +61,6 @@ void setup()
         led.update();
     }
 
-    //led.setLEDState(LEDState::OFF);
-    //led.update();
-
     voc.begin();
     button.begin();
 
