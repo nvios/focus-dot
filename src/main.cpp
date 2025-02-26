@@ -39,7 +39,7 @@ void onTimerComplete()
 {
     appState.setMode(AppMode::ANIMATION);
     led.setLEDState(LEDState::SPIN_RAINBOW);
-    animationsController->startBitmapAnimation((const byte *)flag, 30, true, false, 5000, 64, 64);
+    animationsController->startBitmapAnimation((const byte *)flag, 30, true, false, 5000, 48, 48, "Mission\n      complete!");
     timerExpirationAnimationActive = true;
     timerExpirationAnimationStart = millis();
 }
@@ -54,7 +54,7 @@ void setup()
     led.setLEDState(LEDState::SPIN_RAINBOW);
 
     animationsController = new AnimationsController(display.getHardware());
-    animationsController->startBitmapAnimation((const byte *)logo2, 21, false, false, 0, 128, 64);
+    animationsController->startBitmapAnimation((const byte *)logo2, 21, false, false, 0, 128, 64,"");
     while (animationsController->isBitmapAnimationRunning())
     {
         animationsController->update();

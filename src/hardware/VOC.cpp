@@ -18,6 +18,8 @@ int VOC::readVOC()
     {
         lastVocUpdate = now;
         _vocVal = _sgp40.getVoclndex();
+        Serial.print("VOC: ");
+        Serial.println(_vocVal);
         LEDState newState = (_vocVal < 100) ? LEDState::SPIN_GREEN : (_vocVal < 180) ? LEDState::SPIN_YELLOW
                                                                                     : LEDState::SPIN_RED;
         if (newState != _lastVocRange)

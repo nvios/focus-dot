@@ -135,7 +135,9 @@ void AnimationsController::updateEyesAnimation()
     display.display();
 }
 
-void AnimationsController::startBitmapAnimation(const byte *frames, int frameCount, bool loop, bool reverse, unsigned long durationMs, int width, int height)
+void AnimationsController::startBitmapAnimation(const byte *frames, int frameCount, bool loop, bool reverse,
+                                                unsigned long durationMs, int width, int height,
+                                                const String &text)
 {
     mode = BITMAP;
     animationFrames = frames;
@@ -150,12 +152,42 @@ void AnimationsController::startBitmapAnimation(const byte *frames, int frameCou
     animationDuration = (durationMs == 0) ? totalFrames * frameDelay : durationMs;
     animationStartTime = millis();
     lastFrameTime = millis();
-    frameX = (display.width() - frameWidth) / 2;
-    frameY = (display.height() - frameHeight) / 2;
+    animationText = text;
+
     frameSize = (frameWidth * frameHeight) / 8;
 
+    if (animationText.length() > 0)
+    {
+        frameX = 0;
+        frameY = (display.height() - frameHeight) / 2;
+    }
+    else
+    {
+        frameX = (display.width() - frameWidth) / 2;
+        frameY = (display.height() - frameHeight) / 2;
+    }
+
     display.clearDisplay();
-    display.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize], frameWidth, frameHeight, SH110X_WHITE);
+
+    if (animationText.length() > 0)
+    {
+        display.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize],
+                           frameWidth, frameHeight, SH110X_WHITE);
+        int textAreaX = frameWidth + 2;
+        int textSize = 2;
+        display.setTextSize(textSize);
+        display.setTextColor(SH110X_WHITE);
+        int textHeight = 6 * textSize;
+        int textY = (display.height() - textHeight) / 2;
+        display.setCursor(textAreaX, textY);
+        display.println(animationText);
+    }
+    else
+    {
+        display.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize],
+                           frameWidth, frameHeight, SH110X_WHITE);
+    }
+
     display.display();
 }
 
@@ -205,7 +237,26 @@ void AnimationsController::updateBitmapAnimation()
             }
         }
         display.clearDisplay();
-        display.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize], frameWidth, frameHeight, SH110X_WHITE);
+        if (animationText.length() > 0)
+        {
+            int bmpX = 0;
+            int bmpY = (display.height() - frameHeight) / 2;
+            display.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize],
+                               frameWidth, frameHeight, SH110X_WHITE);
+            int textAreaX = frameWidth + 2;
+            int textSize = 2;
+            display.setTextSize(textSize);
+            display.setTextColor(SH110X_WHITE);
+            int textHeight = 6 * textSize;
+            int textY = (display.height() - textHeight) / 2;
+            display.setCursor(textAreaX, textY);
+            display.println(animationText);
+        }
+        else
+        {
+            display.drawBitmap(frameX, frameY, &animationFrames[currentFrame * frameSize],
+                               frameWidth, frameHeight, SH110X_WHITE);
+        }
         display.display();
     }
 }
