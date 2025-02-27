@@ -3,9 +3,16 @@
 
 #include <Arduino.h>
 #include "configurations/Config.h"
+#include "hardware/Display.h"
 
-void setupTime(const char* ntpServer);
+class NTPController {
+public:
+    NTPController(Display &display);
+    bool begin(const char* ntpServer);
 
-bool syncTime(unsigned long timeoutMs);
+private:
+    void setupTime(const char* ntpServer);
+    Display &display;
+};
 
 #endif

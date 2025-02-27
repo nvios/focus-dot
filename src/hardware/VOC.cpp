@@ -1,13 +1,13 @@
 #include "hardware/VOC.h"
 
 VOC::VOC(LED &led)
-    : _led(led), lastVocUpdate(0), _vocVal(0), _lastVocRange(LEDState::IDLE) {}
+    : _led(led), lastVocUpdate(0), _vocVal(0), _lastVocRange(LEDState::SPIN_GREEN) {}
 
 void VOC::begin()
 {
     if (!_sgp40.begin(10000))
     {
-        // sensor initialization failure handling
+        Serial.println("Failed to initialize SGP40 sensor!");
     }
 }
 
@@ -21,7 +21,7 @@ int VOC::readVOC()
         Serial.print("VOC: ");
         Serial.println(_vocVal);
         LEDState newState = (_vocVal < 100) ? LEDState::SPIN_GREEN : (_vocVal < 180) ? LEDState::SPIN_YELLOW
-                                                                                    : LEDState::SPIN_RED;
+                                                                                     : LEDState::SPIN_RED;
         if (newState != _lastVocRange)
         {
             _led.setLEDState(newState);

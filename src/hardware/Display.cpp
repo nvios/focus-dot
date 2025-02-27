@@ -289,6 +289,32 @@ void Display::drawTimer(const TimerState &timer)
     display_.display();
 }
 
+void Display::drawProgressBar(int x, int y, int width, int height, int progress) {
+  if (progress < 0) progress = 0;
+  if (progress > 100) progress = 100;
+
+  int radius = height / 2;
+  display_.drawRoundRect(x, y, width, height, radius, SH110X_WHITE);
+
+  int fillWidth = (width * progress) / 100;
+
+  if (fillWidth > 0) {
+    if (progress >= 100) {
+      display_.fillRoundRect(x, y, width, height, radius, SH110X_WHITE);
+    } else {
+      int minRoundedWidth = radius; 
+      
+      if (fillWidth <= minRoundedWidth) {
+        display_.fillCircle(x + radius, y + radius, fillWidth, SH110X_WHITE);
+      } else {
+        display_.fillRoundRect(x, y, fillWidth, height, radius, SH110X_WHITE);
+        display_.fillRect(x + radius, y, fillWidth - radius, height, SH110X_WHITE);
+      }
+    }
+  }
+  display_.display();
+}
+
 Adafruit_SH1106G &Display::getHardware()
 {
     return display_;

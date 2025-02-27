@@ -46,6 +46,7 @@ public:
   void drawTimerDialogue(const TimerState& timer);
   void drawTimer(const TimerState &timer);
   void drawEvent(const String &title, const String &startTime, const String &endTime, int hoursToAdd);
+  void drawProgressBar(int x, int y, int width, int height, int progress);
 
   Adafruit_SH1106G &getHardware();
 

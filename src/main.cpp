@@ -20,6 +20,7 @@ Display display;
 VOC voc(led);
 State appState;
 WiFiController wifiController(display);
+NTPController ntpController(display);
 MQTTController mqttController(appState, led, display);
 AnimationsController *animationsController = nullptr;
 ClockState clockState(display, voc);
@@ -37,11 +38,11 @@ unsigned long timerExpirationAnimationStart = 0;
 
 void onTimerComplete()
 {
-    appState.setMode(AppMode::ANIMATION);
-    led.setLEDState(LEDState::SPIN_RAINBOW);
-    animationsController->startBitmapAnimation((const byte *)flag, 30, true, false, 5000, 48, 48, "Mission\n      complete!");
     timerExpirationAnimationActive = true;
     timerExpirationAnimationStart = millis();
+    appState.setMode(AppMode::ANIMATION);
+    animationsController->startBitmapAnimation((const byte *)flag, 30, true, false, 5000, 48, 48, "Mission\n      complete!");
+    led.setLEDState(LEDState::SPIN_RAINBOW);
 }
 
 void setup()
@@ -67,19 +68,19 @@ void setup()
     if (!wifiController.begin(WIFI_SSID, WIFI_PASS))
     {
         Serial.println("Wi-Fi connection failed...");
-        display.writeAlignedText("Connection timeout. Restarting...", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        display.writeAlignedText("Connection timeout :(\n\nRestarting...", DISPLAY_WIDTH, DISPLAY_HEIGHT);
         delay(2000);
         ESP.restart();
     }
-    mqttController.begin(1);
-    display.writeAlignedText("Checking the time...", DISPLAY_WIDTH, DISPLAY_HEIGHT);
-    setupTime(NTP_SERVER);
-    if (!syncTime(10000))
+    mqttController.begin(2);
+    
+    if (!ntpController.begin(NTP_SERVER))
     {
-        Serial.println("Time sync failed, continuing anyway.");
         display.writeAlignedText("Time sync failed :(", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        delay(2000);
     }
     appState.getTimer().setOnComplete(onTimerComplete);
+    led.setLEDState(LEDState::IDLE);
 }
 
 void loop()

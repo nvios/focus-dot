@@ -51,13 +51,13 @@ void LED::displaySolidColor(uint8_t R, uint8_t G, uint8_t B, uint8_t brightness)
 
 void LED::animateRainbowEffect()
 {
-    uint16_t numPixels = _ring.numPixels();
-    for (uint16_t i = 0; i < numPixels; i++)
-    {
-        uint16_t hue = (millis() / 10 + (i * 256 / numPixels)) & 0xFF;
-        _ring.setPixelColor(i, _ring.gamma32(_ring.ColorHSV(hue * 256)));
-    }
-    _ring.show();
+        uint16_t numPixels = _ring.numPixels();
+        for (uint16_t i = 0; i < numPixels; i++)
+        {
+            uint16_t hue = (millis() / 10 + (i * 256 / numPixels)) & 0xFF;
+            _ring.setPixelColor(i, _ring.gamma32(_ring.ColorHSV(hue * 256)));
+        }
+        _ring.show();
 }
 
 void LED::animateTailFade(uint8_t R, uint8_t G, uint8_t B)
@@ -151,7 +151,7 @@ void LED::update()
         }
         else
         {
-            animateTailFade(255, 255, 0);
+            animateTailFade(255, 160, 0);
         }
         break;
     case LEDState::SPIN_RED:

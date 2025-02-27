@@ -11,7 +11,7 @@ MQTTController::MQTTController(State &appStateRef, LED &ledRef, Display &display
 
 void MQTTController::begin(int maxAttempts)
 {
-    display.writeAlignedText("Syncing your events...");
+    display.writeAlignedText("Syncing your events...", 128, 64, 0, 0, 2, true, true, true, VALIGN_TOP, HALIGN_CENTER);
     mqtt.subscribe(&eventFeed);
     if (!mqttConnect(maxAttempts))
     {
@@ -38,16 +38,21 @@ void MQTTController::update(unsigned long now)
     if (sub == &eventFeed)
     {
         parseEventJSON((char *)eventFeed.lastread);
-        if (message, eventStart, eventEnd, eventTitle == ""){
+        if (message, eventStart, eventEnd, eventTitle == "")
+        {
             return;
         }
         led.setLEDState(LEDState::SPIN_RAINBOW);
         eventDisplayStart = now;
         eventDisplayed = true;
-        if (message == ""){
+        if (message == "")
+        {
             display.drawEvent(eventTitle, eventStart, eventEnd, 1);
         }
-        else {display.writeAlignedText(message.c_str());}
+        else
+        {
+            display.writeAlignedText(message.c_str());
+        }
         appState.setMode(AppMode::NOTIFICATION);
     }
 
@@ -66,6 +71,10 @@ void MQTTController::update(unsigned long now)
 bool MQTTController::mqttConnect(int maxAttempts)
 {
     int attempts = 0;
+    unsigned long start = millis();
+    unsigned long lastUpdate = millis();
+    int progress = 75;
+    display.drawProgressBar(10, 42, 108, 8, progress);
     while (attempts < maxAttempts)
     {
         Serial.print("Attempting MQTT connection (try #");
@@ -77,12 +86,17 @@ bool MQTTController::mqttConnect(int maxAttempts)
             Serial.println("MQTT Connected!");
             return true;
         }
-        else
+        if (millis() - start > 5000)
         {
             Serial.print("MQTT connect failed: ");
             Serial.println(mqtt.connectErrorString(ret));
             mqtt.disconnect();
-            delay(5000);
+        }
+        if (millis() - lastUpdate > 1000)
+        {
+            progress = progress > 90 ? 90 : progress += 1;
+            display.drawProgressBar(10, 42, 108, 8, progress);
+            lastUpdate = millis();
         }
         attempts++;
     }
