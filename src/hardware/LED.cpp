@@ -4,6 +4,7 @@
 
 const unsigned long LED::EVENT_ANIMATION_MS = 45000;
 const unsigned long LED::VOC_ANIMATION_MS = 10000;
+const unsigned long LED::VOC_RED_PULSE_MS = 500;
 
 LED::LED(uint8_t pin, uint16_t numPixels)
     : _ring(numPixels, pin, NEO_GRB + NEO_KHZ800),
@@ -37,41 +38,41 @@ LEDState LED::getLEDState() const
     return _stateManager.getState();
 }
 
-void LED::setCustomColor(uint8_t R, uint8_t G, uint8_t B)
+void LED::setCustomColor(uint8_t r, uint8_t g, uint8_t b)
 {
-    _stateManager.setCustomColor(R, G, B);
+    _stateManager.setCustomColor(r, g, b);
 }
 
-void LED::displaySolidColor(uint8_t R, uint8_t G, uint8_t B, uint8_t brightness)
+void LED::displaySolidColor(uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
-    uint32_t color = _ring.Color((R * brightness) / 255, (G * brightness) / 255, (B * brightness) / 255);
+    uint32_t color = _ring.Color((r * brightness) / 255, (g * brightness) / 255, (b * brightness) / 255);
     _ring.fill(color);
     _ring.show();
 }
 
 void LED::animateRainbowEffect()
 {
-        uint16_t numPixels = _ring.numPixels();
-        for (uint16_t i = 0; i < numPixels; i++)
-        {
-            uint16_t hue = (millis() / 10 + (i * 256 / numPixels)) & 0xFF;
-            _ring.setPixelColor(i, _ring.gamma32(_ring.ColorHSV(hue * 256)));
-        }
-        _ring.show();
+    uint16_t numPixels = _ring.numPixels();
+    for (uint16_t i = 0; i < numPixels; i++)
+    {
+        uint16_t hue = (millis() / 10 + (i * 256 / numPixels)) & 0xFF;
+        _ring.setPixelColor(i, _ring.gamma32(_ring.ColorHSV(hue * 256)));
+    }
+    _ring.show();
 }
 
-void LED::animateTailFade(uint8_t R, uint8_t G, uint8_t B)
+void LED::animateTailFade(uint8_t r, uint8_t g, uint8_t b)
 {
     uint16_t numPixels = _ring.numPixels();
     _ring.clear();
-    _ring.setPixelColor(_activeLed, _ring.Color(R, G, B));
+    _ring.setPixelColor(_activeLed, _ring.Color(r, g, b));
     uint8_t maxBrightness = 50;
     uint8_t tailLen = 9;
     for (uint8_t i = 1; i <= tailLen; i++)
     {
         uint8_t brightness = maxBrightness - (maxBrightness / (tailLen + 1)) * i;
         int index = (_activeLed - i + numPixels) % numPixels;
-        _ring.setPixelColor(index, _ring.Color((R * brightness) / maxBrightness, (G * brightness) / maxBrightness, (B * brightness) / maxBrightness));
+        _ring.setPixelColor(index, _ring.Color((r * brightness) / maxBrightness, (g * brightness) / maxBrightness, (b * brightness) / maxBrightness));
     }
     _ring.show();
 
@@ -82,7 +83,7 @@ void LED::animateTailFade(uint8_t R, uint8_t G, uint8_t B)
     }
 }
 
-void LED::animatePulse(uint8_t R, uint8_t G, uint8_t B)
+void LED::animatePulse(uint8_t r, uint8_t g, uint8_t b)
 {
     const int pulseMax = 24;
     const int pulseMin = 4;
@@ -107,7 +108,7 @@ void LED::animatePulse(uint8_t R, uint8_t G, uint8_t B)
             _pulseVal -= 1;
         }
     }
-    uint32_t color = _ring.Color((R * _pulseVal) / pulseMax, (G * _pulseVal) / pulseMax, (B * _pulseVal) / pulseMax);
+    uint32_t color = _ring.Color((r * _pulseVal) / pulseMax, (g * _pulseVal) / pulseMax, (b * _pulseVal) / pulseMax);
     _ring.fill(color);
     _ring.show();
 }

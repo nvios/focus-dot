@@ -1,99 +1,99 @@
 #include "states/TimerState.h"
 
 TimerState::TimerState()
-    : presetCount(3), currentPresetIdx(0),
-      running(false), paused(false),
-      endTime(0), pausedRemaining(0),
-      onComplete(nullptr) // initialize observer to null
+    : _presetCount(3), _currentPresetIdx(0),
+      _running(false), _paused(false),
+      _endTime(0), _pausedRemaining(0),
+      _onComplete(nullptr) // initialize observer to null
 {
-    presetDurations[0] = 5;     // 5  seconds
-    presetDurations[1] = 300;   // 5 minutes
-    presetDurations[2] = 14400; // 240 minutes
+    _presetDurations[0] = 5;     // 5  seconds
+    _presetDurations[1] = 300;   // 5 minutes
+    _presetDurations[2] = 14400; // 240 minutes
 }
 
 void TimerState::setPresets(const int *presets, int count)
 {
-    presetCount = (count > 3) ? 3 : count;
-    for (int i = 0; i < presetCount; i++)
+    _presetCount = (count > 3) ? 3 : count;
+    for (int i = 0; i < _presetCount; i++)
     {
-        presetDurations[i] = presets[i];
+        _presetDurations[i] = presets[i];
     }
 }
 
 int TimerState::cyclePreset()
 {
-    currentPresetIdx = (currentPresetIdx + 1) % presetCount;
-    return currentPresetIdx;
+    _currentPresetIdx = (_currentPresetIdx + 1) % _presetCount;
+    return _currentPresetIdx;
 }
 
 void TimerState::start()
 {
-    running = true;
-    paused = false;
-    unsigned long durationMs = presetDurations[currentPresetIdx] * 1000UL;
-    endTime = nowMs() + durationMs;
-    pausedRemaining = 0;
+    _running = true;
+    _paused = false;
+    unsigned long durationMs = _presetDurations[_currentPresetIdx] * 1000UL;
+    _endTime = nowMs() + durationMs;
+    _pausedRemaining = 0;
 }
 
 void TimerState::pause()
 {
-    if (running && !paused)
+    if (_running && !_paused)
     {
-        paused = true;
-        pausedRemaining = endTime - nowMs();
+        _paused = true;
+        _pausedRemaining = _endTime - nowMs();
     }
 }
 
 void TimerState::resume()
 {
-    if (running && paused)
+    if (_running && _paused)
     {
-        paused = false;
-        endTime = nowMs() + pausedRemaining;
-        pausedRemaining = 0;
+        _paused = false;
+        _endTime = nowMs() + _pausedRemaining;
+        _pausedRemaining = 0;
     }
 }
 
 void TimerState::stop()
 {
-    running = false;
-    paused = false;
-    endTime = 0;
-    pausedRemaining = 0;
-    currentPresetIdx = 0;
+    _running = false;
+    _paused = false;
+    _endTime = 0;
+    _pausedRemaining = 0;
+    _currentPresetIdx = 0;
 }
 
-bool TimerState::isRunning() const { return running; }
-bool TimerState::isPaused() const { return paused; }
+bool TimerState::isRunning() const { return _running; }
+bool TimerState::isPaused() const { return _paused; }
 
-int TimerState::getCurrentPresetIndex() const { return currentPresetIdx; }
+int TimerState::getCurrentPresetIndex() const { return _currentPresetIdx; }
 
 unsigned long TimerState::getRemainingMs() const
 {
-    if (!running)
+    if (!_running)
         return 0;
-    if (paused)
-        return pausedRemaining;
-    long remain = (long)endTime - (long)nowMs();
+    if (_paused)
+        return _pausedRemaining;
+    long remain = (long)_endTime - (long)nowMs();
     return (remain > 0) ? remain : 0;
 }
 
 int TimerState::getCurrentPresetDuration() const
 {
-    if (currentPresetIdx < 0 || currentPresetIdx >= presetCount)
+    if (_currentPresetIdx < 0 || _currentPresetIdx >= _presetCount)
         return 0;
-    return presetDurations[currentPresetIdx];
+    return _presetDurations[_currentPresetIdx];
 }
 
 void TimerState::update()
 {
-    if (running && !paused)
+    if (_running && !_paused)
     {
-        if (nowMs() >= endTime)
+        if (nowMs() >= _endTime)
         {
-            if (onComplete)
+            if (_onComplete)
             {
-                onComplete();
+                _onComplete();
             }
             stop();
         }
@@ -104,5 +104,5 @@ unsigned long TimerState::nowMs() const { return millis(); }
 
 void TimerState::setOnComplete(void (*callback)(void))
 {
-    onComplete = callback;
+    _onComplete = callback;
 }

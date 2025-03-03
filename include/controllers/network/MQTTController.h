@@ -10,7 +10,8 @@
 #include "hardware/LED.h"
 #include "hardware/Display.h"
 
-class MQTTController {
+class MQTTController
+{
 public:
     MQTTController(State &appStateRef, LED &ledRef, Display &displayRef);
     void begin(int maxAttempts);
@@ -31,6 +32,7 @@ private:
     String eventTitle, eventStart, eventEnd, message;
     bool showEvent = false, eventDisplayed = false;
     unsigned long eventDisplayStart = 0;
+    unsigned long _lastPingTime = 0;
 };
 
 #endif

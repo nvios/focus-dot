@@ -1,44 +1,44 @@
 #include "states/State.h"
 
-State::State() : mode(AppMode::CLOCK), dialogueMessage(""), dialogueType(DialogueType::NONE) {}
+State::State() : _mode(AppMode::CLOCK), _dialogueMessage(""), _dialogueType(DialogueType::NONE) {}
 
 AppMode State::getMode() const
 {
-    return mode;
+    return _mode;
 }
 
-void State::setMode(AppMode m)
+void State::setMode(AppMode mode)
 {
-    mode = m;
+    _mode = mode;
 }
 
 void State::cycleMode()
 {
-    if (mode == AppMode::CLOCK)
-        mode = AppMode::TIMER;
-    else if (mode == AppMode::TIMER)
-        mode = AppMode::ANIMATION;
+    if (_mode == AppMode::CLOCK)
+        _mode = AppMode::TIMER;
+    else if (_mode == AppMode::TIMER)
+        _mode = AppMode::ANIMATION;
     else
-        mode = AppMode::CLOCK;
+        _mode = AppMode::CLOCK;
 }
 
 TimerState &State::getTimer()
 {
-    return timer;
+    return _timer;
 }
 
 void State::setDialogueMessage(const String &msg, DialogueType type)
 {
-    dialogueMessage = msg;
-    dialogueType = type;
+    _dialogueMessage = msg;
+    _dialogueType = type;
 }
 
 String State::getDialogueMessage() const
 {
-    return dialogueMessage;
+    return _dialogueMessage;
 }
 
 DialogueType State::getDialogueType() const
 {
-    return dialogueType;
+    return _dialogueType;
 }

@@ -24,15 +24,15 @@ public:
     void setOnComplete(void (*callback)(void));
 
 private:
-    int presetCount;
-    int currentPresetIdx;
-    bool running;
-    bool paused;
-    unsigned long endTime;
-    unsigned long pausedRemaining;
-    int presetDurations[3];
+    int _presetCount;
+    int _currentPresetIdx;
+    bool _running;
+    bool _paused;
+    unsigned long _endTime;
+    unsigned long _pausedRemaining;
+    int _presetDurations[3];
     unsigned long nowMs() const;
-    void (*onComplete)(void);
+    void (*_onComplete)(void);
 };
 
 #endif

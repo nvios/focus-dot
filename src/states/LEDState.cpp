@@ -13,9 +13,9 @@ LEDState LEDStateManager::getState() const
     return _currentLEDState;
 }
 
-void LEDStateManager::setCustomColor(uint8_t R, uint8_t G, uint8_t B)
+void LEDStateManager::setCustomColor(uint8_t r, uint8_t g, uint8_t b)
 {
-    customR = R;
-    customG = G;
-    customB = B;
+    customR = r;
+    customG = g;
+    customB = b;
 }

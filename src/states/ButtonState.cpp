@@ -12,80 +12,84 @@ ButtonState::ButtonState(LED &led,
                          WiFiController &wifi,
                          ClockState &clock,
                          State &appState)
-    : led(led),
-      display(display),
-      wifiController(wifi),
-      clock(clock),
-      appState(appState)
+    : _presetNumber(0),
+      _resetModeEnteredTime(0),
+      _ignoreNextClick(false),
+      _currentState(AppState::STATE_IDLE),
+      _led(led),
+      _display(display),
+      _wifiController(wifi),
+      _clock(clock),
+      _appState(appState)
 {
 }
 
 void ButtonState::handleEvent(ButtonEvent event)
 {
-    if (event == BUTTON_EVENT_RESET_HOLD)
+    if (event == ButtonEvent::RESET_HOLD)
     {
-        appState.setDialogueMessage("Click to go back\n\nDouble click to reset", DialogueType::RESET);
-        appState.setMode(AppMode::DIALOGUE);
-        display.writeAlignedText("Click to go back\n\nDouble click to reset", DISPLAY_WIDTH, DISPLAY_HEIGHT);
-        led.setLEDState(LEDState::PULSE_BLUE);
+        _appState.setDialogueMessage("Click to go back\n\nDouble click to reset", DialogueType::RESET);
+        _appState.setMode(AppMode::DIALOGUE);
+        _display.writeAlignedText("Click to go back\n\nDouble click to reset", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        _led.setLEDState(LEDState::PULSE_BLUE);
         return;
     }
 
-    switch (appState.getMode())
+    switch (_appState.getMode())
     {
     case AppMode::CLOCK:
     {
-        if (event == BUTTON_EVENT_SINGLE_CLICK)
+        if (event == ButtonEvent::SINGLE_CLICK)
         {
-            appState.setDialogueMessage("", DialogueType::TIMER_START);
-            appState.setMode(AppMode::DIALOGUE);
-            led.setLEDState(LEDState::PULSE_BLUE);
-            display.drawTimerDialogue(appState.getTimer());
+            _appState.setDialogueMessage("", DialogueType::TIMER_START);
+            _appState.setMode(AppMode::DIALOGUE);
+            _led.setLEDState(LEDState::PULSE_BLUE);
+            _display.drawTimerDialogue(_appState.getTimer());
         }
         break;
     }
 
     case AppMode::TIMER:
     {
-        auto &timerRef = appState.getTimer();
+        auto &timerRef = _appState.getTimer();
         if (!timerRef.isRunning() && !timerRef.isPaused())
         {
-            if (event == BUTTON_EVENT_DOUBLE_CLICK)
+            if (event == ButtonEvent::DOUBLE_CLICK)
             {
                 timerRef.start();
-                appState.setMode(AppMode::TIMER);
-                led.setLEDState(LEDState::PULSE_RED);
+                _appState.setMode(AppMode::TIMER);
+                _led.setLEDState(LEDState::PULSE_RED);
             }
-            else if (event == BUTTON_EVENT_SINGLE_CLICK)
+            else if (event == ButtonEvent::SINGLE_CLICK)
             {
-                appState.setMode(AppMode::ANIMATION);
-                led.setLEDState(LEDState::IDLE);
+                _appState.setMode(AppMode::ANIMATION);
+                _led.setLEDState(LEDState::IDLE);
             }
         }
         else if (timerRef.isRunning())
         {
-            if (event == BUTTON_EVENT_SINGLE_CLICK)
+            if (event == ButtonEvent::SINGLE_CLICK)
             {
                 timerRef.pause();
-                appState.setDialogueMessage("Click to resume\n\nDouble click to stop", DialogueType::TIMER_PAUSED);
-                appState.setMode(AppMode::DIALOGUE);
-                display.writeAlignedText(appState.getDialogueMessage(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
-                led.setLEDState(LEDState::PULSE_BLUE);
+                _appState.setDialogueMessage("Click to resume\n\nDouble click to stop", DialogueType::TIMER_PAUSED);
+                _appState.setMode(AppMode::DIALOGUE);
+                _display.writeAlignedText(_appState.getDialogueMessage(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
+                _led.setLEDState(LEDState::PULSE_BLUE);
             }
         }
         else if (timerRef.isPaused())
         {
-            if (event == BUTTON_EVENT_SINGLE_CLICK)
+            if (event == ButtonEvent::SINGLE_CLICK)
             {
                 timerRef.resume();
-                appState.setMode(AppMode::TIMER);
-                led.setLEDState(LEDState::PULSE_RED);
+                _appState.setMode(AppMode::TIMER);
+                _led.setLEDState(LEDState::PULSE_RED);
             }
-            else if (event == BUTTON_EVENT_DOUBLE_CLICK)
+            else if (event == ButtonEvent::DOUBLE_CLICK)
             {
                 timerRef.stop();
-                appState.setMode(AppMode::CLOCK);
-                led.setLEDState(LEDState::IDLE);
+                _appState.setMode(AppMode::CLOCK);
+                _led.setLEDState(LEDState::IDLE);
             }
         }
         break;
@@ -93,66 +97,66 @@ void ButtonState::handleEvent(ButtonEvent event)
 
     case AppMode::ANIMATION:
     {
-        if (event == BUTTON_EVENT_SINGLE_CLICK)
+        if (event == ButtonEvent::SINGLE_CLICK)
         {
-            appState.setMode(AppMode::CLOCK);
-            led.setLEDState(LEDState::IDLE);
+            _appState.setMode(AppMode::CLOCK);
+            _led.setLEDState(LEDState::IDLE);
         }
         break;
     }
 
     case AppMode::DIALOGUE:
     {
-        DialogueType type = appState.getDialogueType();
+        DialogueType type = _appState.getDialogueType();
         if (type == DialogueType::TIMER_START)
         {
-            if (event == BUTTON_EVENT_DOUBLE_CLICK)
+            if (event == ButtonEvent::DOUBLE_CLICK)
             {
-                appState.getTimer().start();
-                appState.setMode(AppMode::TIMER);
-                led.setLEDState(LEDState::PULSE_RED);
+                _appState.getTimer().start();
+                _appState.setMode(AppMode::TIMER);
+                _led.setLEDState(LEDState::PULSE_RED);
             }
-            else if (event == BUTTON_EVENT_LONG_PRESS)
+            else if (event == ButtonEvent::LONG_PRESS)
             {
-                appState.getTimer().cyclePreset();
-                appState.setDialogueMessage("", DialogueType::TIMER_START);
-                display.drawTimerDialogue(appState.getTimer());
+                _appState.getTimer().cyclePreset();
+                _appState.setDialogueMessage("", DialogueType::TIMER_START);
+                _display.drawTimerDialogue(_appState.getTimer());
             }
-            else if (event == BUTTON_EVENT_SINGLE_CLICK)
+            else if (event == ButtonEvent::SINGLE_CLICK)
             {
-                appState.setMode(AppMode::ANIMATION);
-                led.setLEDState(LEDState::IDLE);
+                _appState.setMode(AppMode::ANIMATION);
+                _led.setLEDState(LEDState::IDLE);
             }
             else
             {
-                led.setLEDState(LEDState::PULSE_BLUE);
+                _led.setLEDState(LEDState::PULSE_BLUE);
             }
         }
         else if (type == DialogueType::TIMER_PAUSED)
         {
-            if (event == BUTTON_EVENT_SINGLE_CLICK)
+            if (event == ButtonEvent::SINGLE_CLICK)
             {
-                appState.getTimer().resume();
-                appState.setMode(AppMode::TIMER);
-                led.setLEDState(LEDState::PULSE_RED);
+                _appState.getTimer().resume();
+                _appState.setMode(AppMode::TIMER);
+                _led.setLEDState(LEDState::PULSE_RED);
             }
-            else if (event == BUTTON_EVENT_DOUBLE_CLICK)
+            else if (event == ButtonEvent::DOUBLE_CLICK)
             {
-                appState.getTimer().stop();
-                appState.setMode(AppMode::CLOCK);
-                led.setLEDState(LEDState::IDLE);
+                _appState.getTimer().stop();
+                _appState.setMode(AppMode::CLOCK);
+                _led.setLEDState(LEDState::IDLE);
             }
         }
         else if (type == DialogueType::RESET)
         {
-            if (event == BUTTON_EVENT_SINGLE_CLICK)
+            if (event == ButtonEvent::SINGLE_CLICK)
             {
-                appState.setMode(AppMode::CLOCK);
-                led.setLEDState(LEDState::IDLE);
+                _appState.setMode(AppMode::CLOCK);
+                _led.setLEDState(LEDState::IDLE);
             }
-            else if (event == BUTTON_EVENT_DOUBLE_CLICK)
+            else if (event == ButtonEvent::DOUBLE_CLICK)
             {
-                display.writeAlignedText("Resetting your device...", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+                _display.writeAlignedText("Resetting your device...", DISPLAY_WIDTH, DISPLAY_HEIGHT);
                 delay(2000);
                 ESP.restart();
             }
@@ -162,12 +166,17 @@ void ButtonState::handleEvent(ButtonEvent event)
 
     case AppMode::NOTIFICATION:
     {
-        if (event == BUTTON_EVENT_SINGLE_CLICK)
+        if (event == ButtonEvent::SINGLE_CLICK)
         {
-            appState.setMode(AppMode::CLOCK);
-            led.setLEDState(LEDState::IDLE);
+            _appState.setMode(AppMode::CLOCK);
+            _led.setLEDState(LEDState::IDLE);
         }
         break;
     }
     }
+}
+
+void ButtonState::setState(AppState newState)
+{
+    _currentState = newState;
 }

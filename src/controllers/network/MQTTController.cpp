@@ -7,6 +7,8 @@ MQTTController::MQTTController(State &appStateRef, LED &ledRef, Display &display
       mqtt(&client, MQTT_SERVER, MQTT_PORT, MQTT_USERNAME, MQTT_KEY),
       eventFeed(&mqtt, MQTT_USERNAME MQTT_FEED)
 {
+    // Set a shorter keep-alive interval (in seconds)
+    mqtt.setKeepAliveInterval(30);
 }
 
 void MQTTController::begin(int maxAttempts)
@@ -18,15 +20,35 @@ void MQTTController::begin(int maxAttempts)
         display.writeAlignedText("MQTT connection failed :(");
         Serial.println("MQTT connection failed; continuing anyway.");
     }
+    _lastPingTime = millis();
 }
 
 void MQTTController::checkConnection(int maxAttempts)
 {
-    if (!mqtt.connected())
+    unsigned long now = millis();
+
+    // If connected, check if we need to ping
+    if (mqtt.connected())
     {
-        mqttConnect(maxAttempts);
-        if (mqtt.connected())
+        // Send a ping every 25 seconds to keep the connection alive
+        if (now - _lastPingTime > 25000)
+        {
+            if (!mqtt.ping())
+            {
+                Serial.println("MQTT ping failed");
+                mqtt.disconnect();
+            }
+            _lastPingTime = now;
+        }
+    }
+    // If not connected, try to reconnect
+    else
+    {
+        if (mqttConnect(maxAttempts))
+        {
             mqtt.subscribe(&eventFeed);
+            _lastPingTime = now;
+        }
     }
 }
 
@@ -34,11 +56,12 @@ void MQTTController::update(unsigned long now)
 {
     if (!mqtt.connected())
         return;
+
     Adafruit_MQTT_Subscribe *sub = mqtt.readSubscription(50);
     if (sub == &eventFeed)
     {
         parseEventJSON((char *)eventFeed.lastread);
-        if (message, eventStart, eventEnd, eventTitle == "")
+        if (message == "" && eventStart == "" && eventEnd == "" && eventTitle == "")
         {
             return;
         }
@@ -75,6 +98,14 @@ bool MQTTController::mqttConnect(int maxAttempts)
     unsigned long lastUpdate = millis();
     int progress = 75;
     display.drawProgressBar(10, 42, 108, 8, progress);
+
+    // Check WiFi first
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        Serial.println("WiFi not connected, can't connect to MQTT");
+        return false;
+    }
+
     while (attempts < maxAttempts)
     {
         Serial.print("Attempting MQTT connection (try #");

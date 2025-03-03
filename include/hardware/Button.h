@@ -2,26 +2,28 @@
 #define HARDWARE_BUTTON_H
 
 #include <OneButton.h>
+#include <functional>
 #include "states/ButtonState.h"
 
-class Button {
+class Button
+{
 public:
     Button(uint8_t pin, bool activeLow, ButtonState &state);
     void begin();
     void tick();
 
 private:
-    static void onSingleClick();
-    static void onDoubleClick();
-    static void onLongPressStart();
-    static void onLongPressDuring();
+    // Callback methods
+    void onSingleClick();
+    void onDoubleClick();
+    void onLongPressStart();
+    void onLongPressDuring();
 
-    static unsigned long pressStartTime;
-    static bool resetHoldFired;
-    static Button* instance;
-
-    OneButton oneButton;
-    ButtonState &buttonState;
+    // Member variables
+    unsigned long _pressStartTime;
+    bool _resetHoldFired;
+    OneButton _oneButton;
+    ButtonState &_buttonState;
 };
 
 #endif

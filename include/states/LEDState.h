@@ -15,12 +15,15 @@ enum class LEDState
     PULSE_BLUE
 };
 
-class LEDStateManager {
+class LEDStateManager
+{
 public:
     LEDStateManager();
     void setState(LEDState newState);
     LEDState getState() const;
-    void setCustomColor(uint8_t R, uint8_t G, uint8_t B);
+    void setCustomColor(uint8_t r, uint8_t g, uint8_t b);
+
+    // These are accessed directly in LED class, so keeping them public
     uint8_t customR, customG, customB;
 
 private:

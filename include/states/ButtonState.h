@@ -1,20 +1,20 @@
 #ifndef BUTTON_STATE_H
 #define BUTTON_STATE_H
 
-enum AppState
+enum class AppState
 {
     STATE_IDLE,
     STATE_CYCLE_MODE,
     STATE_RESET
 };
 
-enum ButtonEvent
+enum class ButtonEvent
 {
-    BUTTON_EVENT_NONE,
-    BUTTON_EVENT_SINGLE_CLICK,
-    BUTTON_EVENT_DOUBLE_CLICK,
-    BUTTON_EVENT_LONG_PRESS,
-    BUTTON_EVENT_RESET_HOLD
+    NONE,
+    SINGLE_CLICK,
+    DOUBLE_CLICK,
+    LONG_PRESS,
+    RESET_HOLD
 };
 
 class LED;
@@ -36,15 +36,18 @@ public:
 
 private:
     void setState(AppState newState);
-    int presetNumber;
-    unsigned long resetModeEnteredTime;
-    bool ignoreNextClick;
-    AppState currentState;
-    LED &led;
-    Display &display;
-    WiFiController &wifiController;
-    ClockState &clock;
-    State &appState;
+
+    int _presetNumber;
+    unsigned long _resetModeEnteredTime;
+    bool _ignoreNextClick;
+    AppState _currentState;
+
+    // References to other components
+    LED &_led;
+    Display &_display;
+    WiFiController &_wifiController;
+    ClockState &_clock;
+    State &_appState;
 };
 
 #endif

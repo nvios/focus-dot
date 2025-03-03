@@ -28,18 +28,24 @@ ButtonState buttonState(led, display, wifiController, clockState, appState);
 Button button(BUTTON_PIN, true, buttonState);
 
 // Timing variables
-static unsigned long lastLedUpdate = 0;
-static unsigned long lastMqttCheck = 0;
-static unsigned long lastMqttUpdate = 0;
+struct TimingControl
+{
+    unsigned long lastLedUpdate = 0;
+    unsigned long lastMqttCheck = 0;
+    unsigned long lastMqttUpdate = 0;
+    unsigned long lastDisplayUpdate = 0;
 
-// Timer expiration animation control
-bool timerExpirationAnimationActive = false;
-unsigned long timerExpirationAnimationStart = 0;
+    // Timer expiration animation control
+    bool timerExpirationAnimationActive = false;
+    unsigned long timerExpirationAnimationStart = 0;
+};
+
+TimingControl timing;
 
 void onTimerComplete()
 {
-    timerExpirationAnimationActive = true;
-    timerExpirationAnimationStart = millis();
+    timing.timerExpirationAnimationActive = true;
+    timing.timerExpirationAnimationStart = millis();
     appState.setMode(AppMode::ANIMATION);
     animationsController->startBitmapAnimation((const byte *)flag, 30, true, false, 5000, 48, 48, "Mission\n      complete!");
     led.setLEDState(LEDState::SPIN_RAINBOW);
@@ -55,7 +61,7 @@ void setup()
     led.setLEDState(LEDState::SPIN_RAINBOW);
 
     animationsController = new AnimationsController(display.getHardware());
-    animationsController->startBitmapAnimation((const byte *)logo2, 21, false, false, 0, 128, 64,"");
+    animationsController->startBitmapAnimation((const byte *)logo2, 21, false, false, 0, 128, 64, "");
     while (animationsController->isBitmapAnimationRunning())
     {
         animationsController->update();
@@ -65,15 +71,31 @@ void setup()
     voc.begin();
     button.begin();
 
-    if (!wifiController.begin(WIFI_SSID, WIFI_PASS))
+    WiFiStatus wifiStatus = wifiController.begin(WIFI_SSID, WIFI_PASS);
+    if (wifiStatus != WiFiStatus::CONNECTED)
     {
-        Serial.println("Wi-Fi connection failed...");
-        display.writeAlignedText("Connection timeout :(\n\nRestarting...", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        String errorMessage;
+        switch (wifiStatus)
+        {
+        case WiFiStatus::CONNECTION_TIMEOUT:
+            errorMessage = "Connection timeout :(";
+            break;
+        case WiFiStatus::INVALID_CREDENTIALS:
+            errorMessage = "Invalid WiFi credentials";
+            break;
+        default:
+            errorMessage = "Unknown WiFi error";
+            break;
+        }
+
+        Serial.println("Wi-Fi connection failed: " + errorMessage);
+        display.writeAlignedText(errorMessage + "\n\nRestarting...", DISPLAY_WIDTH, DISPLAY_HEIGHT);
         delay(2000);
         ESP.restart();
     }
+
     mqttController.begin(2);
-    
+
     if (!ntpController.begin(NTP_SERVER))
     {
         display.writeAlignedText("Time sync failed :(", DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -83,52 +105,78 @@ void setup()
     led.setLEDState(LEDState::IDLE);
 }
 
-void loop()
+void updatePeripherals(unsigned long now)
 {
+    // Update button
     button.tick();
-    unsigned long now = millis();
-    if (now - lastLedUpdate >= 50)
+
+    // Update LED at 20Hz
+    if (now - timing.lastLedUpdate >= 50)
     {
-        lastLedUpdate = now;
+        timing.lastLedUpdate = now;
         led.update();
     }
-    if (now - lastMqttCheck >= MQTT_RETRY_FREQUENCY_MS)
+
+    // Check MQTT connection every 30 seconds instead of hourly
+    if (now - timing.lastMqttCheck >= 30000)
     {
-        lastMqttCheck = now;
-        mqttController.checkConnection(3);
-    }
-    if (now - lastMqttUpdate >= 2000)
-    {
-        lastMqttUpdate = now;
-        mqttController.update(now);
+        timing.lastMqttCheck = now;
+        mqttController.checkConnection(1); // Only try once to avoid delays
     }
 
+    // Update MQTT every second
+    if (now - timing.lastMqttUpdate >= 1000)
+    {
+        timing.lastMqttUpdate = now;
+        mqttController.update(now);
+    }
+}
+
+void updateAppState(unsigned long now)
+{
     switch (appState.getMode())
     {
     case AppMode::CLOCK:
         clockState.update();
         break;
+
     case AppMode::TIMER:
     {
         appState.getTimer().update();
-        static unsigned long lastDisplayUpdate = 0;
-        if (now - lastDisplayUpdate >= 1000)
+
+        // Update timer display once per second
+        if (now - timing.lastDisplayUpdate >= 1000)
         {
-            lastDisplayUpdate = now;
+            timing.lastDisplayUpdate = now;
             display.drawTimer(appState.getTimer());
         }
         break;
     }
+
     case AppMode::ANIMATION:
         animationsController->update();
-        if (timerExpirationAnimationActive && (now - timerExpirationAnimationStart >= 5000))
+        if (timing.timerExpirationAnimationActive &&
+            (now - timing.timerExpirationAnimationStart >= 5000))
         {
-            timerExpirationAnimationActive = false;
+            timing.timerExpirationAnimationActive = false;
             appState.setMode(AppMode::CLOCK);
             led.setLEDState(LEDState::IDLE);
         }
         break;
+
     case AppMode::DIALOGUE:
+        // No update needed for dialogue mode
         break;
     }
+}
+
+void loop()
+{
+    unsigned long now = millis();
+
+    // Update peripherals and controllers
+    updatePeripherals(now);
+
+    // Update application state
+    updateAppState(now);
 }

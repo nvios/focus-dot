@@ -2,6 +2,7 @@
 #define LED_DRIVER_H
 
 #include <Adafruit_NeoPixel.h>
+#include <array>
 #include "configurations/Config.h"
 #include "states/LEDState.h"
 
@@ -13,8 +14,8 @@ public:
     void setLEDState(LEDState newState);
     LEDState getLEDState() const;
     void update();
-    void displaySolidColor(uint8_t R, uint8_t G, uint8_t B, uint8_t brightness);
-    void setCustomColor(uint8_t R, uint8_t G, uint8_t B);
+    void displaySolidColor(uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
+    void setCustomColor(uint8_t r, uint8_t g, uint8_t b);
 
 private:
     Adafruit_NeoPixel _ring;
@@ -33,9 +34,9 @@ private:
     static const unsigned long VOC_RED_PULSE_MS;
 
     // Animation functions
-    void animateRainbowEffect();           // full-strip rainbow (boot up)
-    void animateTailFade(uint8_t R, uint8_t G, uint8_t B); // tail fade effect (spinning)
-    void animatePulse(uint8_t R, uint8_t G, uint8_t B);      // pulse effect with increased speed
+    void animateRainbowEffect();                           // full-strip rainbow (boot up)
+    void animateTailFade(uint8_t r, uint8_t g, uint8_t b); // tail fade effect (spinning)
+    void animatePulse(uint8_t r, uint8_t g, uint8_t b);    // pulse effect with increased speed
 };
 
 #endif

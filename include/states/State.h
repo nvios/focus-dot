@@ -4,7 +4,8 @@
 #include <Arduino.h>
 #include "states/TimerState.h"
 
-enum class AppMode {
+enum class AppMode
+{
     CLOCK,
     TIMER,
     ANIMATION,
@@ -12,14 +13,16 @@ enum class AppMode {
     DIALOGUE
 };
 
-enum class DialogueType {
+enum class DialogueType
+{
     NONE,
     TIMER_START,
     TIMER_PAUSED,
     RESET
 };
 
-class State {
+class State
+{
 public:
     State();
     AppMode getMode() const;
@@ -32,10 +35,10 @@ public:
     DialogueType getDialogueType() const;
 
 private:
-    AppMode mode;
-    String dialogueMessage;
-    DialogueType dialogueType;
-    TimerState timer;
+    AppMode _mode;
+    String _dialogueMessage;
+    DialogueType _dialogueType;
+    TimerState _timer;
 };
 
 #endif
