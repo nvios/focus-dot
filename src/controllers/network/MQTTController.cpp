@@ -27,21 +27,17 @@ void MQTTController::checkConnection(int maxAttempts)
 {
     unsigned long now = millis();
 
-    // If connected, check if we need to ping
+    // If connected, check if we need to ping (no blocking operations)
     if (mqtt.connected())
     {
         // Send a ping every 25 seconds to keep the connection alive
         if (now - _lastPingTime > 25000)
         {
-            if (!mqtt.ping())
-            {
-                Serial.println("MQTT ping failed");
-                mqtt.disconnect();
-            }
+            mqtt.ping(); // Don't check result to avoid blocking
             _lastPingTime = now;
         }
     }
-    // If not connected, try to reconnect
+    // If not connected, try to reconnect (with minimal attempts)
     else
     {
         if (mqttConnect(maxAttempts))
@@ -102,7 +98,6 @@ bool MQTTController::mqttConnect(int maxAttempts)
     // Check WiFi first
     if (WiFi.status() != WL_CONNECTED)
     {
-        Serial.println("WiFi not connected, can't connect to MQTT");
         return false;
     }
 

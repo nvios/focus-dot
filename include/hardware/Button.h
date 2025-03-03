@@ -2,7 +2,6 @@
 #define HARDWARE_BUTTON_H
 
 #include <OneButton.h>
-#include <functional>
 #include "states/ButtonState.h"
 
 class Button
@@ -13,11 +12,20 @@ public:
     void tick();
 
 private:
-    // Callback methods
+    // Static callback handlers for OneButton
+    static void handleClick();
+    static void handleDoubleClick();
+    static void handleLongPressStart();
+    static void handleLongPressDuring();
+
+    // Instance callback methods
     void onSingleClick();
     void onDoubleClick();
     void onLongPressStart();
     void onLongPressDuring();
+
+    // Static instance pointer for callbacks
+    static Button *_instance;
 
     // Member variables
     unsigned long _pressStartTime;

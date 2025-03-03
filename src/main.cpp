@@ -107,7 +107,7 @@ void setup()
 
 void updatePeripherals(unsigned long now)
 {
-    // Update button
+    // Update button (highest priority for responsiveness)
     button.tick();
 
     // Update LED at 20Hz
@@ -117,15 +117,16 @@ void updatePeripherals(unsigned long now)
         led.update();
     }
 
-    // Check MQTT connection every 30 seconds instead of hourly
+    // Check MQTT connection every 30 seconds
     if (now - timing.lastMqttCheck >= 30000)
     {
         timing.lastMqttCheck = now;
-        mqttController.checkConnection(1); // Only try once to avoid delays
+        // Only try once to avoid delays
+        mqttController.checkConnection(1);
     }
 
-    // Update MQTT every second
-    if (now - timing.lastMqttUpdate >= 1000)
+    // Update MQTT frequently but with minimal blocking
+    if (now - timing.lastMqttUpdate >= 500)
     {
         timing.lastMqttUpdate = now;
         mqttController.update(now);
