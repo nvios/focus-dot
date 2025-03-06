@@ -5,7 +5,7 @@ WiFiController::WiFiController(Display &display)
 
 WiFiStatus WiFiController::begin(const char *ssid, const char *password, unsigned long timeout)
 {
-    _display.writeAlignedText("Connecting to your Wi-Fi...",
+    _display.writeAlignedText("Connecting to the Wi-Fi...",
                               DISPLAY_WIDTH, DISPLAY_HEIGHT,
                               0, 0, 2, true, true, true,
                               VALIGN_TOP, HALIGN_CENTER);

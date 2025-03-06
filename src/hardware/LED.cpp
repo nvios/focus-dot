@@ -168,7 +168,8 @@ void LED::update()
         }
         break;
     case LEDState::PULSE_RED:
-        animatePulse(255, 0, 0);
+        // animatePulse(255, 0, 0); is annoying as an ADHD sufferer :D
+        displaySolidColor(255, 0, 0, 10);
         break;
     case LEDState::PULSE_BLUE:
         animatePulse(0, 64, 255);

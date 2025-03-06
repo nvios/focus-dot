@@ -13,7 +13,7 @@ MQTTController::MQTTController(State &appStateRef, LED &ledRef, Display &display
 
 void MQTTController::begin(int maxAttempts)
 {
-    display.writeAlignedText("Syncing your events...", 128, 64, 0, 0, 2, true, true, true, VALIGN_TOP, HALIGN_CENTER);
+    display.writeAlignedText("Syncing events...", 128, 64, 0, 0, 2, true, true, true, VALIGN_TOP, HALIGN_CENTER);
     mqtt.subscribe(&eventFeed);
     if (!mqttConnect(maxAttempts))
     {

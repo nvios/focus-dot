@@ -6,9 +6,9 @@ TimerState::TimerState()
       _endTime(0), _pausedRemaining(0),
       _onComplete(nullptr) // initialize observer to null
 {
-    _presetDurations[0] = 5;     // 5  seconds
-    _presetDurations[1] = 300;   // 5 minutes
-    _presetDurations[2] = 14400; // 240 minutes
+    _presetDurations[0] = 1500;   // 25 minutes
+    _presetDurations[1] = 5;     // 5  seconds
+    _presetDurations[2] = 3000; // 50 minutes
 }
 
 void TimerState::setPresets(const int *presets, int count)
